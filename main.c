@@ -3,6 +3,14 @@
 
 int simulate(unsigned short);
 
+void addSubtract(unsigned short instr);
+void moveShiftedRegister(unsigned short instr);
+void arithmeticImediate(unsigned short instr);
+void alu(unsigned short instr);
+void pcRelativeLoad(unsigned short instr);
+void loadStoreRegisterOffset(unsigned short instr);
+void loadStoreWithImmOffset(unsigned short instr);
+
 unsigned char Mem[1024];
 unsigned int Regs[16];
 
@@ -37,19 +45,26 @@ int simulate(unsigned short instr)
     fmt = (instr) >> 13;
 
     switch (fmt) {
-        case 0b000:
+        case 0b000: // for format zero check whether to add/subtract or shift register
+			(instr >> 11 & 3) == 3 ? addSubtract(instr) ? moveShiftedRegister(instr);
+		break;
+
+        case 0b001: // arithmetic operations with immediate value
+			arithmeticImediate(instr);
         break;
 
-        case 0b001:
+        case 0b010: // format 4 & 6 & 7
+			if (isntr >> 10 & (0b010000) == (0b010000)) alu(instr); // alu operations format 4
+			else if (isntr >> 11 & (0b01001) == (0b01001)) pcRelativeLoad(instr); // format 6
+			else if (instr >> 12 & (0b0101) == (0b0101)) loadStoreRegisterOffset(instr); // format 7
         break;
 
-        case 0b010:
+        case 0b011: // format 9
+			loadStoreWithImmOffset(instr);
         break;
 
-        case 0b011:
-        break;
+        case 0b101: // format 13 &  14
 
-        case 0b101:
         break;
 
         case 0b110:
