@@ -1,0 +1,24 @@
+button.nav {
+    background-color:white;
+    color: black;
+    height: 50px;
+    border-color: grey;
+    -webkit-border-radius: 10px;
+    border: 2px solid transparent;
+    padding:5px;
+    width:76px;
+    margin-bottom:5px;
+    margin-top: 5px;
+}
+
+div.nav{
+    background-color:#303F9F;
+    height: 60px;
+    padding-left: 30px;
+}
+
+body{
+    background-color:#FFFFFF;
+    padding: 0px;
+    margin: 0px;
+}
