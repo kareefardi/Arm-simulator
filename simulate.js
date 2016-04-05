@@ -64,12 +64,6 @@ function addSubtract(instr){
     }
 }
 
-// prints output to web ui
-function printInstruction(instrString){
-    
-}
-
-function 
 
 // format 1
 function moveShiftedRegister(instr){
@@ -78,21 +72,30 @@ function moveShiftedRegister(instr){
     var destinationReg = instr & 0b111;
     var sourceReg = instr>>3 & 0b111;
     var opcode = intr>>11 & 0b11;
-    
+    var stringInstr; // string representation of instruction
     switch(opcode){
         case 0:
             regs[destinationReg] = reg[sourceReg]<<offset; // left arthmetic shift
+            stringInstr = concatArgs('MOVS','R',destinationReg
+                                     ,',','R',sourceReg,',','LSL#',offset);
             break;
         case 1:
             regs[destinationReg] = reg[sourceReg]>>>offset; // right logical shift
+            
+            stringInstr = concatArgs('MOVS','R',destinationReg
+                                     ,',','R',sourceReg,',','LSR#',offset);
             break;
         case 2;
             regs[destinationReg] = reg[sourceReg]>>offset; // right arithmetic shift
+            stringInstr = concatArgs('MOVS','R',destinationReg
+                                     ,',','R',sourceReg,',','ASR#',offset);
             break;
         default:
             console.log('move shifted register unknown operation');
+            stringInstr = 'unknown instruction';
+            break;
     }
-    
+    printInstruction(stringInstr);
 }
 // format 3, comparision condition not written
 function arithmeticImediate(instr){
@@ -100,21 +103,30 @@ function arithmeticImediate(instr){
     var offset8 = instr&0b1111111;
     var destinationReg = instr>>8 & 0b111;
     var opCode = instr>>11 & 0b11;
-    
+    var stringInstr;
     switch(opCode){
         case 0:
             reg[destinationReg] = offset8;
+            stringInstr = concatArgs('MOVS ','R',
+                                     destinationReg,',#',offset);
             break;
         case 1:
-            
+            // implement comparison
+            stringInstr = concatArgs('CMP ','R',
+                                     destinationReg,',#',offset);
             break:
         case 2:
             reg[destinationReg] = reg[destinationReg] + offset8;
+            stringInstr = concatArgs('ADDS ','R',
+                    destinationReg,',R',destinationReg,',#',offset);
             break;
         case 3:
             reg[destinationReg] = regs[destinationReg] - offset8;
+            stringInstr = concatArgs('SUBS ','R',
+                    destinationReg,',R',destinationReg,',#',offset);
             break;
     }
+    printInstruction(stringInstr);
 }
 //format 4
 function alu(instr){
@@ -182,4 +194,12 @@ function conditionalBranch(instr){
 }
 
 function openFile(){
+}
+// concatinates all strings and integers into a string
+function concatArgs(){
+    var str;
+    for (var i = 0; i < arguments.length; i++) {
+        str = str + arguments[i];
+    }
+    return str;
 }

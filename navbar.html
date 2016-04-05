@@ -2,7 +2,7 @@
 <html>
     <head>
         <link rel = 'stylesheet' href='style.css'/>
-        
+        <script src="console.js"></script>
     </head>
     
     <body>
@@ -12,12 +12,9 @@
             <button type='button' onClick="step()"  class='nav'>Step</button>
             <button type='button' onClick="openFile()" class='nav' style='float:right; margin-right:50px;'>Open file</button>
         </div>
-
         
-        <div id='split_pane' class='split_container'>
-            <div id='left_pane'>
-                <p>he iman</p>
-            </div>
+        <div id='split_pane'>
+            <ul id='left_pane'></li></ul>
             <div id='right_pane'>
                 <p>hay man</p>
             </div>
@@ -35,34 +32,6 @@
             </div>
         </div>
         
-        <script>
-            function handleFileSelect(evt){
-                evt.stopPropagation();
-                evt.preventDefault();
-                
-                var files = evt.dataTransfer.files;
-                var output = [];
-                
-                for(var i = 0,f; f = files[i];i++){
-                    output.push(f.name);
-                    document.getElementById('list').innerHTML = output.join('') ;
-                }
-            }
-            
-            function handleDrageOver(evt){
-                evt.stopImmediatePropagation();
-                evt.preventDefault();
-                evt.dataTransfer.dropEffect = 'copy';
-            }
-            
-            function openFile(){
-                document.getElementById('fileDropBox').style.display = "block";
-            }
-            
-            var dropzone = document.getElementById('drop_zone');
-            dropzone.addEventListener('dragover',handleDrageOver,false);
-            dropzone.addEventListener('drop',handleFileSelect,false);
-        </script>
         
         <div id='fileDropBox' class="dropbox">
             <input type="file" id="files" name="files[]"/>

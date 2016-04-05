@@ -17,16 +17,7 @@ div.nav{
     padding-left: 30px;
 }
 
-div.split_container{
-   position: relative;
-   border-color: grey;
-   border-width: 1px;
-   -webkit-border-radius: 10px;
-   margin: 0px
-   border: 2px solid black;
-   padding: 5px;
-   width: 50%; 
-}
+
 
 div.titlebar{
     border-width: 1px;
@@ -55,8 +46,14 @@ body{
     flex:1;
     border: 1px solid white;
     min-height: 450px;
+    max-height:100%;
     background-color:yellow;
-    height: 100%;
+    list-style:none;
+    margin:0;
+    overflow:auto;
+    padding:0;
+    text-indent:10px;
+    max-height: 40vh
 }
 
 #right_pane{
@@ -120,4 +117,18 @@ body{
 
 .dropbox{
     display: none;
+}
+
+#instructions_list{
+  list-style:none;
+  max-height:inherit;
+  height: inherit
+  margin:0;
+  overflow:auto;
+  padding:0;
+  text-indent:10px;
+}
+
+li{
+    line-height: 25px;
 }
