@@ -1,12 +1,10 @@
 var mem = new Uint16Array(1024);
 var regs = new Int32(16);
-var fmt, op, offset5, rd, rs, offset3, rn;
-
+var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
 
 function simulate(instr) {
-    "use strict"; // results in a error if undeclared variables are used 
-    
-    fmt = intr>>13; // discard all but last 3 bits used for format identification
+    "use strict";
+    var fmt = intr>>13; // discard all but last 3 bits used for format identification
     
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
@@ -50,6 +48,7 @@ function simulate(instr) {
 
 //format 2
 function addSubtract(instr){
+    "use strict";
     var offsetNReg = instr>>6 & 0b11111; // register id or immediate value depending
     var destinationReg = instr & 0b111;     // on op immediate flag 
     var sourceReg = instr>>3 & 0b111;
@@ -65,7 +64,7 @@ function addSubtract(instr){
     }
 }
 
-// prints a string
+// prints output to web ui
 function printInstruction(instrString){
     
 }
@@ -74,6 +73,7 @@ function
 
 // format 1
 function moveShiftedRegister(instr){
+    "use strict";
     var offset = instr>>6 & 0b11111; // extract offset
     var destinationReg = instr & 0b111;
     var sourceReg = instr>>3 & 0b111;
@@ -96,6 +96,7 @@ function moveShiftedRegister(instr){
 }
 // format 3, comparision condition not written
 function arithmeticImediate(instr){
+    "use strict";
     var offset8 = instr&0b1111111;
     var destinationReg = instr>>8 & 0b111;
     var opCode = instr>>11 & 0b11;
@@ -115,8 +116,48 @@ function arithmeticImediate(instr){
             break;
     }
 }
+//format 4
 function alu(instr){
+    var destinationReg = instr & 0b111;
+    var sourceReg = instr>>3 & 0b111;
+    var opcode = instr>>6 & 0b1111;
     
+    switch(instr){
+        case 0: // overflow detection not implemented
+            reg[destinationReg] += reg[sourceReg];
+            zeroFlag = regs[destinationReg] == 0; 
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+        case 9:
+            break;
+        case 10:
+            break;
+        case 11:
+            break;
+        case 12:
+            break;
+        case 13:
+            break;
+        case 14:
+            break:
+        case default:
+            break;    
+    }
 }
 function pcRelativeLoad(instr){
     
@@ -138,4 +179,7 @@ function londBranchWithLink(instr){
 }
 function conditionalBranch(instr){
     
+}
+
+function openFile(){
 }

@@ -18,6 +18,7 @@ div.nav{
 }
 
 div.split_container{
+   position: relative;
    border-color: grey;
    border-width: 1px;
    -webkit-border-radius: 10px;
@@ -27,8 +28,96 @@ div.split_container{
    width: 50%; 
 }
 
+div.titlebar{
+    border-width: 1px;
+    border-color: lightgray;
+    -webkit-border-radius: 10px;
+    background-color: lightgrey;
+    min-height: 30px;
+    margin: 5px
+}
+
 body{
     background-color:#FFFFFF;
     padding: 0px;
     margin: 0px;
+    height: auto;
+}
+
+#split_pane{
+    display: -webkit-flex;
+    display: flex;
+    width:100%;
+}
+
+#left_pane{
+    -webkit-flex:1;
+    flex:1;
+    border: 1px solid white;
+    min-height: 450px;
+    background-color:yellow;
+    height: 100%;
+}
+
+#right_pane{
+    -webkit-flex:1;
+    flex:1;
+    border: 1px solid white;
+    background-color:green;
+    height: 500px;
+    color:green;
+    min-height: 450px;
+    height: 100%;
+}
+
+.graybox{
+    width:200px;
+    height:200px;
+    background-color:#CCCCCC;
+}
+.overlay-layer{
+    width:200px;
+    height:40px;
+    position:absolute;
+    margin-top:-40px;
+    opacity:0.5;
+    background-color:#000000;
+    z-index:0;
+    font-size:25px;
+    color:#FFFFFF;
+    text-align:center;
+    line-height:40px;
+}
+.upload_btn{
+    position:absolute;
+    width:200px;
+    height:40px;
+    margin-top:-40px;
+    z-index:10;
+    opacity:0;
+}
+.overlay-layer{
+    width:200px;
+    height:40px;
+    position:absolute;
+    margin-top:-40px;
+    opacity:0.5;
+    background-color:#000000;
+    z-index:0;
+    font-size:25px;
+    color:#FFFFFF;
+    text-align:center;
+    line-height:40px;
+}
+.hidden_upload_btn{
+    position:absolute;
+    width:200px;
+    height:40px;
+    margin-top:-40px;
+    z-index:10;
+    opacity:0;
+}
+
+.dropbox{
+    display: none;
 }

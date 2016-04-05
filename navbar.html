@@ -1,26 +1,74 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel = 'stylesheet' href='style.css'
+        <link rel = 'stylesheet' href='style.css'/>
+        
     </head>
     
     <body>
         <div class='nav'>
-            <button type='button' onclick="start()" class='nav'>Start</button>
-            <button type='button' onclick="stop()"  class='nav'>Stop</button>
-            <button type='button' onclick="step()"  class='nav'>Step</button>
-            <button type='button' onclick="openFile()" class='nav' style='float:right; margin-right:50px;'>Open file</button>
+            <button type='button' onClick="start()" class='nav'>Start</button>
+            <button type='button' onClick="stop()"  class='nav'>Stop</button>
+            <button type='button' onClick="step()"  class='nav'>Step</button>
+            <button type='button' onClick="openFile()" class='nav' style='float:right; margin-right:50px;'>Open file</button>
+        </div>
+
+        
+        <div id='split_pane' class='split_container'>
+            <div id='left_pane'>
+                <p>he iman</p>
+            </div>
+            <div id='right_pane'>
+                <p>hay man</p>
+            </div>
         </div>
         
+        <div>
+            <div class='titlebar'>
+                <h4>Output</h4>
+            </div>
+        </div>
         
         <div>
-            <div id='output_pane' class='split_container' style="float:left;">
-                <p style="background-color:green;">hello world</p>
+            <div class ='titlebar'>
+                <h4>Registers and Flags</h4>
             </div>
-            <div id='info_pane' class='split_container' style="float:right;">
-                <p style="background-color:green;">hello subworld</p>
-            </div>
+        </div>
+        
+        <script>
+            function handleFileSelect(evt){
+                evt.stopPropagation();
+                evt.preventDefault();
+                
+                var files = evt.dataTransfer.files;
+                var output = [];
+                
+                for(var i = 0,f; f = files[i];i++){
+                    output.push(f.name);
+                    document.getElementById('list').innerHTML = output.join('') ;
+                }
+            }
+            
+            function handleDrageOver(evt){
+                evt.stopImmediatePropagation();
+                evt.preventDefault();
+                evt.dataTransfer.dropEffect = 'copy';
+            }
+            
+            function openFile(){
+                document.getElementById('fileDropBox').style.display = "block";
+            }
+            
+            var dropzone = document.getElementById('drop_zone');
+            dropzone.addEventListener('dragover',handleDrageOver,false);
+            dropzone.addEventListener('drop',handleFileSelect,false);
+        </script>
+        
+        <div id='fileDropBox' class="dropbox">
+            <input type="file" id="files" name="files[]"/>
+            <output id="list"></output>
         </div>
         
     </body>
+    
 </html>
