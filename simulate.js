@@ -4,7 +4,9 @@ var fmt, op, offset5, rd, rs, offset3, rn;
 
 
 function simulate(instr) {
-    "use strict"; // results in a error if undeclared variables are used
+    "use strict"; // results in a error if undeclared variables are used 
+    
+    fmt = intr>>13; // discard all but last 3 bits used for format identification
     
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
@@ -46,15 +48,72 @@ function simulate(instr) {
     }
 }
 
-//
+//format 2
 function addSubtract(instr){
+    var offsetNReg = instr>>6 & 0b11111; // register id or immediate value depending
+    var destinationReg = instr & 0b111;     // on op immediate flag 
+    var sourceReg = instr>>3 & 0b111;
+    var immediateFlag = instr>>10 & 0b1;
+    var opCode = instr>>9 & 0b1;
+    
+    if(opCode == 0){ // add
+        regs[destinationReg] immediateFlag == 1 ? 
+            regs[sourceReg] + offsetNValue : regs[sourceReg] + regs[offsetNReg];
+    }else{ // subtract
+        regs[destinationReg] immediateFlag == 1 ? 
+            regs[sourceReg] - offsetNValue : regs[sourceReg] - regs[offsetNReg];
+    }
+}
+
+// prints a string
+function printInstruction(instrString){
     
 }
+
+function 
+
+// format 1
 function moveShiftedRegister(instr){
+    var offset = instr>>6 & 0b11111; // extract offset
+    var destinationReg = instr & 0b111;
+    var sourceReg = instr>>3 & 0b111;
+    var opcode = intr>>11 & 0b11;
+    
+    switch(opcode){
+        case 0:
+            regs[destinationReg] = reg[sourceReg]<<offset; // left arthmetic shift
+            break;
+        case 1:
+            regs[destinationReg] = reg[sourceReg]>>>offset; // right logical shift
+            break;
+        case 2;
+            regs[destinationReg] = reg[sourceReg]>>offset; // right arithmetic shift
+            break;
+        default:
+            console.log('move shifted register unknown operation');
+    }
     
 }
+// format 3, comparision condition not written
 function arithmeticImediate(instr){
+    var offset8 = instr&0b1111111;
+    var destinationReg = instr>>8 & 0b111;
+    var opCode = instr>>11 & 0b11;
     
+    switch(opCode){
+        case 0:
+            reg[destinationReg] = offset8;
+            break;
+        case 1:
+            
+            break:
+        case 2:
+            reg[destinationReg] = reg[destinationReg] + offset8;
+            break;
+        case 3:
+            reg[destinationReg] = regs[destinationReg] - offset8;
+            break;
+    }
 }
 function alu(instr){
     
