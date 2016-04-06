@@ -57,13 +57,13 @@ function addSubtract(instr){
 
     if(opCode == 0){ // add
          if(immediateFlag == 1){
-            regs[destinationReg] =  regs[sourceReg] + offsetNValue;
+            regs[destinationReg] =  regs[sourceReg] + offsetNReg;
          }else{
           regs[destinationReg] = regs[sourceReg] + regs[offsetNReg];
         }
     }else{ // subtract
          if(immediateFlag == 1){
-            regs[destinationReg] = regs[sourceReg] - offsetNValue;
+            regs[destinationReg] = regs[sourceReg] - offsetNReg;
         }else{
             regs[destinationReg] = regs[sourceReg] - regs[offsetNReg];
         }

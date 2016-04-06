@@ -6,7 +6,7 @@
         <script src='simulate.js'> </script>
     </head>
 
-    <body>
+    <body onload="addEventListeners()">
         <div class='nav'>
             <button type='button' onClick="start()" class='nav'>Start</button>
             <button type='button' onClick="stop()"  class='nav'>Stop</button>
@@ -42,7 +42,6 @@
                 <input type="file" id="filesIn" name="files[]"/>
                 <output id="list">Drop Files here</output>
         </div>
-
     </body>
 
 </html>
