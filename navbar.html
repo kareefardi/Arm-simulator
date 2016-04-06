@@ -5,7 +5,7 @@
         <script src='console.js'> </script>
         <script src='simulate.js'> </script>
     </head>
-    
+
     <body>
         <div class='nav'>
             <button type='button' onClick="start()" class='nav'>Start</button>
@@ -34,14 +34,14 @@
         </div>
 
 
-        <div id='fileDropBox' class="dropbox">
-            <input type="file" id="files" name="files[]"/>
-        </div>
+    <!--    <div id='fileDropBox' class="dropbox">
+            <input type="file" id="filesIn" name="files[]"/>
+        </div> -->
 
-      <script>
-        for(var i = 0; i < 100; i++)
-          printInstruction('hello world');
-      </script>
+        <div id='fileDropBox' class="dropbox">
+                <input type="file" id="filesIn" name="files[]"/>
+                <output id="list">Drop Files here</output>
+        </div>
 
     </body>
 
