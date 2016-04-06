@@ -9,7 +9,7 @@ function printInstruction(instrString){
     li.appendChild(document.createTextNode(instrString));
     display.appendChild(li);
 }
-
+/* to be removed
 function handleFileSelect(evt){
     evt.stopPropagation();
     evt.preventDefault();
@@ -27,7 +27,7 @@ function handleDrageOver(evt){
     evt.stopImmediatePropagation();
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy';
-}
+} */
 
 function openFile(){
     showDropBox();
@@ -50,7 +50,7 @@ function readFileContent(event){
         
         reader.onload = function(e){
             var contents = e.target.result;
-            convertedBuf = new Uint16Array(contents);
+            codeSegment = new Uint16Array(contents);
             for(var i = 0; i < convertedBuf.length;i++){
                 mem[i] = convertedBuf[i];
             }
@@ -65,6 +65,11 @@ function readFileContent(event){
 
 function addEventListeners(){
  document.getElementById('filesIn').addEventListener('change',readFileContent,true);
+    
+  document.addEventListener('DOMContentLoaded', function () {
+  if (Notification.permission !== "granted")
+        Notification.requestPermission();
+  });
 }
 
 function notify(title,prompt){

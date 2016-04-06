@@ -1,6 +1,27 @@
-var mem = new Uint16Array(1024);
+var mem = new Uint8Array(1024);
 var regs = new Int32Array(16);
+
+regs[15] = 2; // set program counter 2 since its always 2 instructions ahaed of what we execture
+var codeSegment; // 16 bit unsigned array, containing instructions to execute
 var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
+
+function start(){
+    
+}
+
+function stop(){
+    
+}
+// executes of statement
+function step(){
+    if(regs-2 < codeSegment.length){
+        simulate(codeSegment[pc-2]);
+        reg[15] += 1; // increment by one   
+    }else{ // disable buttons of step and start since execution finished
+        
+    }
+}
+
 
 function simulate(instr) {
     "use strict";
@@ -103,7 +124,7 @@ function moveShiftedRegister(instr){
     }
     printInstruction(stringInstr);
 }
-// format 3, comparision condition not written
+// format 3,  condition codes not written
 function arithmeticImediate(instr){
     "use strict";
     var offset8 = instr&0b1111111;
@@ -117,6 +138,15 @@ function arithmeticImediate(instr){
                                      destinationReg,',#',offset);
             break;
         case 1:
+            if(reg[destinationReg] == offset8)
+                zeroFlag = 1;
+            else
+                zeroFlag = 0;
+            if(reg[destinationReg]-offset8 < 0)
+                negativeFlag = 1;
+            else
+                negativeFlag = 0;
+            carryFlag = overflow = 0;
             // implement comparison
             stringInstr = concatArgs('CMP ','R',
                                      destinationReg,',#',offset);
@@ -206,3 +236,4 @@ function concatArgs(){
     }
     return str;
 }
+
