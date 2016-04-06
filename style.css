@@ -17,6 +17,10 @@ div.nav{
     padding-left: 30px;
 }
 
+div.dropbox{
+    display: none;
+}
+
 
 
 div.titlebar{
@@ -113,10 +117,6 @@ body{
     margin-top:-40px;
     z-index:10;
     opacity:0;
-}
-
-.dropbox{
-    display: none;
 }
 
 #instructions_list{

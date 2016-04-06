@@ -1,6 +1,6 @@
 // for display instructions executed
 // prints output to web ui
-
+// all ui events are written here
 function printInstruction(instrString){
     "use strict";
     var display = document.getElementById('left_pane');
@@ -9,32 +9,30 @@ function printInstruction(instrString){
     display.appendChild(li);
 }
 
-<script>
-    function handleFileSelect(evt){
-        evt.stopPropagation();
-        evt.preventDefault();
+function handleFileSelect(evt){
+    evt.stopPropagation();
+    evt.preventDefault();
 
-        var files = evt.dataTransfer.files;
-        var output = [];
+    var files = evt.dataTransfer.files;
+    var output = [];
 
-        for(var i = 0,f; f = files[i];i++){
-            output.push(f.name);
-            document.getElementById('list').innerHTML = output.join('') ;
-        }
+    for(var i = 0,f; f = files[i];i++){
+        output.push(f.name);
+        document.getElementById('list').innerHTML = output.join('') ;
     }
+}
 
-    function handleDrageOver(evt){
-        evt.stopImmediatePropagation();
-        evt.preventDefault();
-        evt.dataTransfer.dropEffect = 'copy';
-    }
+function handleDrageOver(evt){
+    evt.stopImmediatePropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy';
+}
 
-    function openFile(){
-        document.getElementById('fileDropBox').style.display = "block";
-    }
+function openFile(){
+    document.getElementById('fileDropBox').style.display = "block";
+}
 
 /*     var dropzone = document.getElementById('drop_zone');
     dropzone.addEventListener('dragOver',handleDrageOver,false);
     dropzone.addEventListener('drop',handleFileSelect,false);
 */
-</script>

@@ -1,14 +1,14 @@
 var mem = new Uint16Array(1024);
-var regs = new Int32(16);
+var regs = new Int32Array(16);
 var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
 
 function simulate(instr) {
     "use strict";
     var fmt = intr>>13; // discard all but last 3 bits used for format identification
-    
+
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
-			(instr >> 11 & 3) == 3 ? addSubtract(instr) ? moveShiftedRegister(instr);
+			(instr >> 11 & 3) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
 		  break;
 
         case 0b001: // arithmetic operations with immediate value
@@ -50,17 +50,23 @@ function simulate(instr) {
 function addSubtract(instr){
     "use strict";
     var offsetNReg = instr>>6 & 0b11111; // register id or immediate value depending
-    var destinationReg = instr & 0b111;     // on op immediate flag 
+    var destinationReg = instr & 0b111;     // on op immediate flag
     var sourceReg = instr>>3 & 0b111;
     var immediateFlag = instr>>10 & 0b1;
     var opCode = instr>>9 & 0b1;
-    
+
     if(opCode == 0){ // add
-        regs[destinationReg] immediateFlag == 1 ? 
-            regs[sourceReg] + offsetNValue : regs[sourceReg] + regs[offsetNReg];
+         if(immediateFlag == 1){
+            regs[destinationReg] =  regs[sourceReg] + offsetNValue;
+         }else{
+          regs[destinationReg] = regs[sourceReg] + regs[offsetNReg];
+        }
     }else{ // subtract
-        regs[destinationReg] immediateFlag == 1 ? 
-            regs[sourceReg] - offsetNValue : regs[sourceReg] - regs[offsetNReg];
+         if(immediateFlag == 1){
+            regs[destinationReg] = regs[sourceReg] - offsetNValue;
+        }else{
+            regs[destinationReg] = regs[sourceReg] - regs[offsetNReg];
+        }
     }
 }
 
@@ -81,11 +87,11 @@ function moveShiftedRegister(instr){
             break;
         case 1:
             regs[destinationReg] = reg[sourceReg]>>>offset; // right logical shift
-            
+
             stringInstr = concatArgs('MOVS','R',destinationReg
                                      ,',','R',sourceReg,',','LSR#',offset);
             break;
-        case 2;
+        case 2:
             regs[destinationReg] = reg[sourceReg]>>offset; // right arithmetic shift
             stringInstr = concatArgs('MOVS','R',destinationReg
                                      ,',','R',sourceReg,',','ASR#',offset);
@@ -114,7 +120,7 @@ function arithmeticImediate(instr){
             // implement comparison
             stringInstr = concatArgs('CMP ','R',
                                      destinationReg,',#',offset);
-            break:
+            break;
         case 2:
             reg[destinationReg] = reg[destinationReg] + offset8;
             stringInstr = concatArgs('ADDS ','R',
@@ -133,11 +139,11 @@ function alu(instr){
     var destinationReg = instr & 0b111;
     var sourceReg = instr>>3 & 0b111;
     var opcode = instr>>6 & 0b1111;
-    
+
     switch(instr){
         case 0: // overflow detection not implemented
             reg[destinationReg] += reg[sourceReg];
-            zeroFlag = regs[destinationReg] == 0; 
+            zeroFlag = regs[destinationReg] == 0;
             break;
         case 1:
             break;
@@ -166,34 +172,31 @@ function alu(instr){
         case 13:
             break;
         case 14:
-            break:
-        case default:
-            break;    
+            break;
+        default:
+            break;
     }
 }
 function pcRelativeLoad(instr){
-    
+
 }
 function loadStoreRegisterOffset(instr){
-    
+
 }
 function loadStoreWithImmOffset(instr){
-    
+
 }
 function addOffsetStackPointer(instr){
-    
+
 }
 function unconditionalBranch(instr){
-    
+
 }
 function londBranchWithLink(instr){
-    
+
 }
 function conditionalBranch(instr){
-    
-}
 
-function openFile(){
 }
 // concatinates all strings and integers into a string
 function concatArgs(){

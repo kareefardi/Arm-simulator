@@ -2,7 +2,8 @@
 <html>
     <head>
         <link rel = 'stylesheet' href='style.css'/>
-        <script src="console.js"></script>
+        <script src='console.js'> </script>
+        <script src='simulate.js'> </script>
     </head>
     
     <body>
@@ -12,32 +13,36 @@
             <button type='button' onClick="step()"  class='nav'>Step</button>
             <button type='button' onClick="openFile()" class='nav' style='float:right; margin-right:50px;'>Open file</button>
         </div>
-        
+
         <div id='split_pane'>
             <ul id='left_pane'></li></ul>
             <div id='right_pane'>
                 <p>hay man</p>
             </div>
         </div>
-        
+
         <div>
             <div class='titlebar'>
                 <h4>Output</h4>
             </div>
         </div>
-        
+
         <div>
             <div class ='titlebar'>
                 <h4>Registers and Flags</h4>
             </div>
         </div>
-        
-        
+
+
         <div id='fileDropBox' class="dropbox">
             <input type="file" id="files" name="files[]"/>
-            <output id="list"></output>
         </div>
-        
+
+      <script>
+        for(var i = 0; i < 100; i++)
+          printInstruction('hello world');
+      </script>
+
     </body>
-    
+
 </html>
