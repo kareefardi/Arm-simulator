@@ -116,8 +116,15 @@ label.divheader{
 
 #register_content{
     color: white;
-    width: inherit;
-    height: inherit;
+    width: 100%;
+    height: auto;
+    border: 1px solid white;
+    border-collapse: collapse;
+}
+
+th,td{
+    border: 1px solid white;
+    border-collapse: collapse;
 }
 
 div.dropbox{

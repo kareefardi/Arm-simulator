@@ -58,7 +58,7 @@ function simulate(instr) {
 
         case 0b111: // format 18 & 19
 			if( ((instr >> 11)&(0b00)) == 0)	unconditionalBranch(instr); // format 18
-			else londBranchWithLink(instr);//format 19
+			else longBranchWithLink(instr);//format 19
             break;
 		case 0xdead: // terminate program
 			terminateProgram(0); // zero for exit_success
@@ -245,11 +245,41 @@ function alu(instr){
 }
 // format 6
 function pcRelativeLoad(instr){
-
+    'use strict';
+    var rd = instr>>8 & 0b111;
+    var word8 = instr>>8 & 255;
+    regs[rd] = mem[word8+regs[15]];
+    printInstruction('LDR R'+rd+'[PC,#'+word8+']');
 }
+// format 7
 function loadStoreRegisterOffset(instr){
-
+    'use strict';
+    var offsetReg = regs[instr>>3&0b111];
+    var baseRegister = regs[instr>>6&0b111]; // regs value
+    var registerSDNum = instr&0b111; // source/destination register index
+    var stringInstr;
+    if(instr>>11 & 1 == 0){ // checking L whether store or load
+        mem[offsetReg+baseRegister] = registerSDNum&255; // get only first 8 bits
+        if( (instr>>10) & 1 == 0){ // save the rest of word
+          mem[offsetReg+baseRegister+1] = regs[registerSDNum]>>8 & 255;
+          mem[offsetReg+baseRegister+2] = regs[registerSDNum]>>16 & 255;
+          mem[offsetReg+baseRegister+3] = regs[registerSDNum]>>24 & 255;  
+          stringInstr = 'STRB';//  save one byte and return
+        }else
+            stringInstr = 'STR';
+    }else{
+        regs[registerSDNum] = mem[offsetReg+baseRegister];
+        if( (instr>>10 & 1) == 0){
+            regs[registerSDNum] |= mem[offsetReg+baseRegister+1]<<8; // load bits intro appropriate positons
+            regs[registerSDNum] |= mem[offsetReg+baseRegister+2]<<16;
+            regs[registerSDNum] |= mem[offsetReg+baseRegister+3]<<24;   
+            stringInstr = 'LDR';
+        }else
+            stringInstr = 'LDRB';
+    }
+    printInstruction(stringInstr);
 }
+
 function loadStoreWithImmOffset(instr){
 
 }
@@ -260,7 +290,7 @@ function unconditionalBranch(instr){
     var offsetvalue= instr >> 10 & 0b1111111111;    //extract offset value
         offsetvalue=offsetvalue-2;  //to account for pc increment
 }
-function londBranchWithLink(instr){
+function longBranchWithLink(instr){
 
 }
 function conditionalBranch(instr){

@@ -9,11 +9,16 @@ function printInstruction(str){
 }
 
 function printRegisterContent(regs){
-    var data = '<tr><th>Register</th><th>Value</th></tr>';
+  //  var data = '<tr><th>Register</th><th>Value</th></tr>';
+    var headers = '<tr>',data='<tr>';
     for(var i = 0; i < regs.length;i++){
-            data += '<tr>'+'<td>R'+i+'</td>'+'<td>'+regs[i]+'</td>'+'</tr>';
+    //        data += '<tr>'+'<td>R'+i+'</td>'+'<td>'+regs[i]+'</td>'+'</tr>';
+        headers += '<th>R'+i+'</th>';
+        data += '<td>'+regs[i]+'</td>';
     }
-    document.getElementById('register_content').innerHTML = data;
+    headers += '</tr>';
+    data +='</tr>';
+    document.getElementById('register_content').innerHTML = headers+data;
 }
 
 
