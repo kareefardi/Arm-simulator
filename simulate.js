@@ -4,6 +4,7 @@ var regs = new Int32Array(16);
 regs[15] = 2; // set program counter 2 since its always 2 instructions ahaed of what we execture
 var codeSegment; // 16 bit unsigned array, containing instructions to execute
 var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
+// conditons flags for implemented formats 1-4 not implemented
 
 function start(){
 
@@ -146,7 +147,7 @@ function arithmeticImediate(instr){
                 negativeFlag = 1;
             else
                 negativeFlag = 0;
-            carryFlag = overflow = 0;
+         //   carryFlag = overflow = 0;
             // implement comparison
             stringInstr = concatArgs('CMP ','R',
                                      destinationReg,',#',offset);
@@ -189,11 +190,17 @@ function alu(instr){
             stringInstr = 'LSR R'+destinationReg+',R'+sourceReg;
             break;
         case 4:
-
-            break;
+            regs[destinationReg] = regs[destinationReg]>>>regs[sourceReg];
+            stringInstr = 'ASR R'+destinationReg+',R'+sourceReg;
+           break;
         case 5:
+            regs[destinationReg] += regs[destinationReg]+carryFlag;
+            stringInstr = 'ADC R'+destinationReg+',R'+sourceReg;
             break;
         case 6:
+            regs[destinationReg] -= regs[sourceReg];
+            regs[destinationReg] -= (~carryFlag)&1; // and with one since carry flag should be 1 bit amd carryhere is i
+            stringInstr = 'SBCs';
             break;
         case 7:// rotate right
             var tmp = regs[destinationReg]>>regs[sourceReg];
@@ -201,7 +208,12 @@ function alu(instr){
             regs[destinationReg] |= tmp;
             stringInstr = 'ROR R'+destinationReg+',R'+sourceReg;
             break;
-        case 8:
+        case 8:// TST /* carryflag calculation not clear yet, overflow flag not affected by TST instruction
+            var result = regs[destinationReg]&regs[sourceReg];
+            zeroFlag = result ? 1 : 0;
+            negativeFlag = result < 0 ? 1 : 0;
+            stringInstr = 'TSR'
+            */
             break;
         case 9:
             regs[destinationReg] = -regs[sourceReg];
