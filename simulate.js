@@ -6,17 +6,17 @@ var codeSegment; // 16 bit unsigned array, containing instructions to execute
 var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
 
 function start(){
-    
+
 }
 
 function stop(){
-    
+
 }
 // executes of statement
 function step(){
     if(regs-2 < codeSegment.length){
         simulate(codeSegment[pc-2]);
-        reg[15] += 1; // increment by one   
+        regs[15] += 1; // increment by one
     }else{ // disable buttons of step and start since execution finished
         
     }
@@ -102,18 +102,18 @@ function moveShiftedRegister(instr){
     var stringInstr; // string representation of instruction
     switch(opcode){
         case 0:
-            regs[destinationReg] = reg[sourceReg]<<offset; // left arthmetic shift
+            regs[destinationReg] = regs[sourceReg]<<offset; // left arthmetic shift
             stringInstr = concatArgs('MOVS','R',destinationReg
                                      ,',','R',sourceReg,',','LSL#',offset);
             break;
         case 1:
-            regs[destinationReg] = reg[sourceReg]>>>offset; // right logical shift
+            regs[destinationReg] = regs[sourceReg]>>>offset; // right logical shift
 
             stringInstr = concatArgs('MOVS','R',destinationReg
                                      ,',','R',sourceReg,',','LSR#',offset);
             break;
         case 2:
-            regs[destinationReg] = reg[sourceReg]>>offset; // right arithmetic shift
+            regs[destinationReg] = regs[sourceReg]>>offset; // right arithmetic shift
             stringInstr = concatArgs('MOVS','R',destinationReg
                                      ,',','R',sourceReg,',','ASR#',offset);
             break;
@@ -133,16 +133,16 @@ function arithmeticImediate(instr){
     var stringInstr;
     switch(opCode){
         case 0:
-            reg[destinationReg] = offset8;
+            regs[destinationReg] = offset8;
             stringInstr = concatArgs('MOVS ','R',
                                      destinationReg,',#',offset);
             break;
         case 1:
-            if(reg[destinationReg] == offset8)
+            if(regs[destinationReg] == offset8)
                 zeroFlag = 1;
             else
                 zeroFlag = 0;
-            if(reg[destinationReg]-offset8 < 0)
+            if(regs[destinationReg]-offset8 < 0)
                 negativeFlag = 1;
             else
                 negativeFlag = 0;
@@ -152,12 +152,12 @@ function arithmeticImediate(instr){
                                      destinationReg,',#',offset);
             break;
         case 2:
-            reg[destinationReg] = reg[destinationReg] + offset8;
+            regs[destinationReg] = regs[destinationReg] + offset8;
             stringInstr = concatArgs('ADDS ','R',
                     destinationReg,',R',destinationReg,',#',offset);
             break;
         case 3:
-            reg[destinationReg] = regs[destinationReg] - offset8;
+            regs[destinationReg] = regs[destinationReg] - offset8;
             stringInstr = concatArgs('SUBS ','R',
                     destinationReg,',R',destinationReg,',#',offset);
             break;
@@ -166,46 +166,69 @@ function arithmeticImediate(instr){
 }
 //format 4
 function alu(instr){
+    "use strict";
     var destinationReg = instr & 0b111;
     var sourceReg = instr>>3 & 0b111;
     var opcode = instr>>6 & 0b1111;
-
+    var stringInstr;
     switch(instr){
         case 0: // overflow detection not implemented
-            reg[destinationReg] += reg[sourceReg];
-            zeroFlag = regs[destinationReg] == 0;
+            regs[destinationReg] += regs[sourceReg];
+            stringInstr = 'AND R'+destinationReg+',R'+sourceReg;
             break;
         case 1:
+            regs[destinationReg] ^= regs[sourceReg];
+            stringInstr = 'EOR R'+destinationReg+',R'+sourceReg;
             break;
         case 2:
+            regs[destinationReg] = regs[destinationReg]<<regs[sourceReg];
+            stringInstr = 'LSL R'+destinationReg+',R'+sourceReg;
             break;
         case 3:
+            regs[destinationReg] = regs[destinationReg]>>regs[sourceReg];
+            stringInstr = 'LSR R'+destinationReg+',R'+sourceReg;
             break;
         case 4:
+
             break;
         case 5:
             break;
         case 6:
             break;
-        case 7:
+        case 7:// rotate right
+            var tmp = regs[destinationReg]>>regs[sourceReg];
+            regs[destinationReg] = regs[destinationReg]<<(32-regs[sourceReg]);
+            regs[destinationReg] |= tmp;
+            stringInstr = 'ROR R'+destinationReg+',R'+sourceReg;
             break;
         case 8:
             break;
         case 9:
+            regs[destinationReg] = -regs[sourceReg];
+            stringInstr = 'NEG R'+destinationReg+',R'+sourceReg;
             break;
         case 10:
             break;
         case 11:
             break;
         case 12:
+            regs[destinationReg] |= regs[sourceReg];
+            stringInstr = 'ORR R'+destinationReg+',R'+sourceReg;
             break;
         case 13:
+            regs[destinationReg] *= regs[sourceReg];
+            stringInstr = 'MUL R'+destinationReg+',R'+sourceReg;
             break;
         case 14:
+            regs[destinationReg] = regs[destinationReg] & (~regs[sourceReg]);
+            stringInstr = 'BIC R'+destinationReg+',R'+sourceReg;
             break;
-        default:
+        default: // opcode 1111
+            regs[destinationReg] = ~regs[sourceReg];
+            stringInstr = 'MVN R'+destinationReg+',R'+sourceReg;
             break;
     }
+    printInstruction(stringInstr);
 }
 function pcRelativeLoad(instr){
 
@@ -236,4 +259,3 @@ function concatArgs(){
     }
     return str;
 }
-
