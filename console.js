@@ -2,32 +2,20 @@
 // prints output to web ui
 // all ui events are written here
 
-function printInstruction(instrString){
-    "use strict";
-    var display = document.getElementById('left_pane');
-    var li = document.createElement('li');
-    li.appendChild(document.createTextNode(instrString));
-    display.appendChild(li);
+function printInstruction(str){
+    var formattedOut = '';
+    for(var i = 0; i < str.length;i++)
+        formattedOut += '<span style="background-color: lightgrey;">'+str[i]+'</span>'; document.getElementById('executed_instruction').innerHTML = formattedOut;
 }
-/* to be removed
-function handleFileSelect(evt){
-    evt.stopPropagation();
-    evt.preventDefault();
 
-    var files = evt.dataTransfer.files;
-    var output = [];
-
-    for(var i = 0,f; f = files[i];i++){
-        output.push(f.name);
-        document.getElementById('list').innerHTML = output.join('') ;
+function printRegisterContent(regs){
+    var data = '<tr><th>Register</th><th>Value</th></tr>';
+    for(var i = 0; i < regs.length;i++){
+            data += '<tr>'+'<td>R'+i+'</td>'+'<td>'+regs[i]+'</td>'+'</tr>';
     }
+    document.getElementById('register_content').innerHTML = data;
 }
 
-function handleDrageOver(evt){
-    evt.stopImmediatePropagation();
-    evt.preventDefault();
-    evt.dataTransfer.dropEffect = 'copy';
-} */
 
 function openFile(){
     showDropBox();
@@ -46,14 +34,10 @@ function readFileContent(event){
     
     if(file){
         var reader = new FileReader();
-        var convertedBuf;
         
         reader.onload = function(e){
             var contents = e.target.result;
             codeSegment = new Uint16Array(contents);
-            for(var i = 0; i < convertedBuf.length;i++){
-                mem[i] = convertedBuf[i];
-            }
             notify('Success','File read');
         }
         reader.readAsArrayBuffer(file);

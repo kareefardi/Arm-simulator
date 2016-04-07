@@ -1,20 +1,117 @@
-button.nav {
-    background-color:white;
-    color: black;
-    height: 50px;
-    border-color: grey;
-    -webkit-border-radius: 10px;
-    border: 2px solid transparent;
-    padding:5px;
-    width:76px;
-    margin-bottom:5px;
-    margin-top: 5px;
+body{
+    
+    background-color:#333;
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+}
+nav {
+    background: #222222;
+    margin:0;
+    overflow: hidden;
+    box-shadow: 0px 5px 5px #111111
 }
 
-div.nav{
-    background-color:#303F9F;
-    height: 60px;
-    padding-left: 30px;
+nav ul{
+    margin:0;
+    padding: 0;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+nav ul li{
+    display: inline-block;
+    list-style-type: none;
+}
+/*
+nav > ul > li > a {
+    color: #aaa;
+    background-color: #FF0;
+    display: block;
+    line-height: 2em;
+    padding: 0.5em 0.5em;
+    text-decoration: none;
+}*/
+
+nav > ul > li > button{
+    color: #FFF;
+    background-color:transparent;
+    -moz-border-radius:0.5px;
+    -webkit-border-radius:12px;
+    border: 2px solid #fff;
+    line-height: 2em;
+    padding: 0.5em 1.5em;
+    text-decoration: none;
+    margin-left: 0.5em;
+}
+
+nav > ul > li > button:hover{
+    opacity: 0.6;
+    filter: alpha(opacity=60); /*for ie 8*/
+}
+
+
+div.split_pane{
+    display: -webkit-flex;
+    display: flex;
+    width:90%;
+    height:40em;
+ /*
+    margin-left: 40px;
+    margin-right: 40px;
+    margin-top: 20px;
+    margin-left:20px;
+    */
+    margin:0 auto;
+}
+
+
+#left_pane{
+    -webkit-flex:1;
+    flex:1;
+}
+
+#sourceCode{
+    color: white;
+    font-size: 1.05em;
+    position: relative;
+    top: 30px;
+    width: 90%;
+    height: 90%;
+    background-color:#222;
+    box-shadow:0px 3px 20px #111111;
+    margin-left:auto;
+    resize: none;
+    border-color: #111111;
+}
+
+#right_pane{
+    -webkit-flex:1;
+    flex:1;
+}
+
+label.divheader{
+    position: relative;
+    top: 20px;
+    height: 20px;
+    color: white;
+    background-color:#333333;
+    width=90%;
+    font-size: 1.9em;
+    margin-left: auto;
+}
+
+#executed_instruction{
+    height: 1em;
+    color: black;
+    font-size: 1.3em;
+    font-family: monospace;
+}
+
+#register_content{
+    color: white;
+    width: inherit;
+    height: inherit;
 }
 
 div.dropbox{
@@ -26,10 +123,6 @@ div.dropbox{
     width: 50%;
     height: 50%;
     align-content: center;
-/*
-    -webkit-box-shadow: 0px 0px 85px 0px rgba(0,0,0,0.75);
-    -moz-box-shadow: 0px 0px 85px 0px rgba(0,0,0,0.75);
-    box-shadow: 0px 0px 85px 0px rgba(0,0,0,0.75); */
     border: 2px dashed #bbb;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
@@ -40,122 +133,7 @@ div.dropbox{
     color: #bbb;
 }
 
-
-
-div.titlebar{
-    border-width: 1px;
-    border-color: lightgray;
-    -webkit-border-radius: 10px;
-    background-color: lightgrey;
-    min-height: 30px;
-    margin: 5px
-}
-
-body{
-    background-color:#FFFFFF;
-    padding: 0px;
-    margin: 0px;
-    height: auto;
-}
-
-#split_pane{
-    display: -webkit-flex;
-    display: flex;
-    width:100%;
-}
-
-#left_pane{
-    -webkit-flex:1;
-    flex:1;
-    border: 1px solid white;
-    min-height: 450px;
-    max-height:100%;
-    background-color:yellow;
-    list-style:none;
-    margin:0;
-    overflow:auto;
-    padding:0;
-    text-indent:10px;
-    max-height: 40vh
-}
-
-#right_pane{
-    -webkit-flex:1;
-    flex:1;
-    border: 1px solid white;
-    background-color:green;
-    height: 500px;
-    color:green;
-    min-height: 450px;
-    height: 100%;
-}
-
-.graybox{
-    width:200px;
-    height:200px;
-    background-color:#CCCCCC;
-}
-.overlay-layer{
-    width:200px;
-    height:40px;
-    position:absolute;
-    margin-top:-40px;
-    opacity:0.5;
-    background-color:#000000;
-    z-index:0;
-    font-size:25px;
-    color:#FFFFFF;
-    text-align:center;
-    line-height:40px;
-}
-.upload_btn{
-    position:absolute;
-    width:200px;
-    height:40px;
-    margin-top:-40px;
-    z-index:10;
-    opacity:0;
-}
-.overlay-layer{
-    width:200px;
-    height:40px;
-    position:absolute;
-    margin-top:-40px;
-    opacity:0.5;
-    background-color:#000000;
-    z-index:0;
-    font-size:25px;
-    color:#FFFFFF;
-    text-align:center;
-    line-height:40px;
-}
-.hidden_upload_btn{
-    position:absolute;
-    width:200px;
-    height:40px;
-    margin-top:-40px;
-    z-index:10;
-    opacity:0;
-}
-
-#instructions_list{
-  list-style:none;
-  max-height:inherit;
-  height: inherit
-  margin:0;
-  overflow:auto;
-  padding:0;
-  text-indent:10px;
-}
-
-li{
-    line-height: 25px;
-}
-
 #filesIn{
-/*  border-style:dashed;
-  border-width: medium;
-  border-color: lightgray; */
   height:95%;
   width:95%;
   position: absolute;

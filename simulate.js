@@ -19,7 +19,7 @@ function step(){
         simulate(codeSegment[pc-2]);
         regs[15] += 1; // increment by one
     }else{ // disable buttons of step and start since execution finished
-        
+
     }
 }
 
@@ -61,7 +61,7 @@ function simulate(instr) {
 			else londBranchWithLink(instr);//format 19
             break;
 		case 0xdead: // terminate program
-			exit(EXIT_SUCCESS);
+			terminateProgram(0); // zero for exit_success
             break;
         default:
             break;
@@ -208,11 +208,12 @@ function alu(instr){
             regs[destinationReg] |= tmp;
             stringInstr = 'ROR R'+destinationReg+',R'+sourceReg;
             break;
-        case 8:// TST /* carryflag calculation not clear yet, overflow flag not affected by TST instruction
+        case 8:// TST
+            /* carryflag calculation not clear yet, overflow flag not affected by TST instruction
             var result = regs[destinationReg]&regs[sourceReg];
             zeroFlag = result ? 1 : 0;
             negativeFlag = result < 0 ? 1 : 0;
-            stringInstr = 'TSR'
+            stringInstr = 'TSR';
             */
             break;
         case 9:
@@ -242,6 +243,7 @@ function alu(instr){
     }
     printInstruction(stringInstr);
 }
+// format 6
 function pcRelativeLoad(instr){
 
 }
@@ -255,7 +257,8 @@ function addOffsetStackPointer(instr){
 
 }
 function unconditionalBranch(instr){
-
+    var offsetvalue= instr >> 10 & 0b1111111111;    //extract offset value
+        offsetvalue=offsetvalue-2;  //to account for pc increment
 }
 function londBranchWithLink(instr){
 
@@ -270,4 +273,8 @@ function concatArgs(){
         str = str + arguments[i];
     }
     return str;
+}
+
+function terminateProgram(status){
+
 }

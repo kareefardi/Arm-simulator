@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <link rel = 'stylesheet' href='style.css'/>
+        <script src="simulate.js"></script>
+        <script src="console.js"></script>
+    </head>
+    
+    <body onload="addEventListeners()">
+    <nav>
+        <ul>
+            <li><button type="button" onClick="openFile()">OpenFile</button></li>
+            <li><button type="button" onClick="start()">Start</button></li>
+            <li><button type="button" onClick="stop()">Stop</a></li>
+            <li><button type="button" onClick="step()">Step</button>
+        </ul>
+    </nav>
+    <div class='split_pane'>
+        <div id='left_pane'>
+            <label class='divheader'>Source Code</label>
+            <textarea id="sourceCode" rows="39"></textarea> 
+        </div>
+        
+        <div id="right_pane">
+            <label class="divheader">Executed Instruction</label>
+            <p id='executed_instruction'></p>
+            
+            <div style="height:200px;width;inherit;overflow:auto;border-style:dashed;border-color:lightgrey;margin-bottom:10px;border-width=1px;">
+                <label class="divheader">Program output</label>
+                <p></p>
+            </div>
+            
+            <div style="height:200px;width;inherit;overflow:auto;">
+                <table id='register_content'>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+        
+    <div id='fileDropBox' class="dropbox">
+            <input type="file" id="filesIn" name="files[]"/>
+            <output id="list">Drop Files here</output>
+    </div>
+        
+    </body>
+</html>
