@@ -49,6 +49,8 @@ function simulate(instr) {
 
         case 0b101: // format 13 &  14
 			if((instr >> 11 & 0b10) == 0b10) addOffsetStackPointer(instr); // format 13
+            else
+                pushPopRegisters(instr); // format 14
             break;
 
         case 0b110: // format 16 & 17
@@ -254,8 +256,10 @@ function pcRelativeLoad(instr){
 // format 7
 function loadStoreRegisterOffset(instr){
     'use strict';
-    var offsetReg = regs[instr>>3&0b111];
-    var baseRegister = regs[instr>>6&0b111]; // regs value
+    var offsetRegIndex = instr>>3&0b111;
+    var baseRegisterIndex = instr>>6&0b111;// array index
+    var offsetReg = regs[offsetRegIndex];
+    var baseRegister = regs[baseRegisterIndex]; // regs value
     var registerSDNum = instr&0b111; // source/destination register index
     var stringInstr;
     if(instr>>11 & 1 == 0){ // checking L whether store or load
@@ -277,14 +281,46 @@ function loadStoreRegisterOffset(instr){
         }else
             stringInstr = 'LDRB';
     }
+    stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',R'+offsetRegIndex+']';
     printInstruction(stringInstr);
 }
-
+// format 9 // now has format 7 code
 function loadStoreWithImmOffset(instr){
-
+    'use strict';
+    var offset5 = instr>>3&0b111;
+    var baseRegisterIndex = instr>>6&0b111;// array index
+    var baseRegister = regs[baseRegisterIndex]; // regs value
+    var registerSDNum = instr&0b111; // source/destination register index
+    var stringInstr;
+    if(instr>>11 & 1 == 0){ // checking L whether store or load
+        mem[offsetReg+offset5] = registerSDNum&255; // get only first 8 bits
+        if( (instr>>12) & 1 == 0){ // save the rest of word
+          mem[offset5+baseRegister+1] = regs[registerSDNum]>>8 & 255;
+          mem[offset5+baseRegister+2] = regs[registerSDNum]>>16 & 255;
+          mem[offset5+baseRegister+3] = regs[registerSDNum]>>24 & 255;  
+          stringInstr = 'STRB';//  save one byte and return
+        }else
+            stringInstr = 'STR';
+    }else{
+            regs[registerSDNum] = mem[offset5+baseRegister];
+        if( (instr>>10 & 1) == 0){
+            regs[registerSDNum] |= mem[offset5+baseRegister+1]<<8; // load bits intro appropriate positons
+            regs[registerSDNum] |= mem[offset5+baseRegister+2]<<16;
+            regs[registerSDNum] |= mem[offset5+baseRegister+3]<<24;   
+            stringInstr = 'LDR';
+        }else
+            stringInstr = 'LDRB';
+    }
+    stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',#'+offset5+']';
+    printInstruction(stringInstr);
 }
+//format 13
 function addOffsetStackPointer(instr){
-
+    var immediate = instr & 0x3f;
+    if((instr>>7&1) == 1))
+        immediate = -immediate;
+    reg[13] += immediate;
+    printInstruction('ADD SP,#',immediate);
 }
 function unconditionalBranch(instr){
     var offsetvalue= instr >> 10 & 0b1111111111;    //extract offset value
@@ -303,6 +339,10 @@ function concatArgs(){
         str = str + arguments[i];
     }
     return str;
+}
+// format 14
+function pushPopRegisters(instr){
+    
 }
 
 function terminateProgram(status){
