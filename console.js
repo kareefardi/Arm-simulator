@@ -54,6 +54,7 @@ function addEventListeners(){
   if (Notification.permission !== "granted")
         Notification.requestPermission();
   });
+  printRegisterContent(regs);
 }
 
 function notify(title,prompt){
