@@ -307,7 +307,7 @@ function loadStoreWithImmOffset(instr){
     var registerSDNum = instr&0b111; // source/destination register index
     var stringInstr;
     if(instr>>11 & 1 == 0){ // checking L whether store or load
-        mem[offsetReg+offset5] = registerSDNum&255; // get only first 8 bits
+        mem[baseRegister+offset5] = registerSDNum&255; // get only first 8 bits
         if( (instr>>12) & 1 == 0){ // save the rest of word
           mem[offset5+baseRegister+1] = regs[registerSDNum]>>8 & 255;
           mem[offset5+baseRegister+2] = regs[registerSDNum]>>16 & 255;
@@ -325,7 +325,7 @@ function loadStoreWithImmOffset(instr){
         }else
             stringInstr = 'LDRB';
     }
-    stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',#'+offset5+']';
+    stringInstr += ' R'+registerSDNum+' ,[R'+baseRegisterIndex+',#'+offset5+']';
     printInstruction(stringInstr);
 }
 //format 13
@@ -375,7 +375,7 @@ function loadStoreHalfword(instr){
     var registerSDNum = instr&0b111; // source/destination register index
     var stringInstr;
     if(instr>>11 & 1 == 0){ // checking L whether store or load
-        mem[offsetReg+offset5] = registerSDNum&255; // get only first 8 bits
+        mem[baseRegister+offset5] = registerSDNum&255; // get only first 8 bits
         mem[offset5+baseRegister+1] = regs[registerSDNum]>>8 & 255;
         stringInstr = 'STRH';//  save one byte and return
         }
@@ -384,6 +384,29 @@ function loadStoreHalfword(instr){
         regs[registerSDNum] |= mem[offset5+baseRegister+1]<<8; // load bits intro appropriate positons
         stringInstr = 'LDRH';
         }
-    stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',#'+offset5+']';
+    stringInstr += ' R'+registerSDNum+' ,[R'+baseRegisterIndex+',#'+offset5+']';
+    printInstruction(stringInstr);
+}
+// format 11
+function SPloadStore(instr){
+    var immediate = instr & 0b11111111;
+    var destinationReg = instr >> 8 & 0b111;
+    var result = immediate + reg[13];
+    varstringInstr;
+    if (instr >> 11 & 1 == 0) {
+        mem[result] = regs[destinationReg] & 255;
+        mem[result + 1] = regs[destinationReg] >> 8 & 255;
+        mem[result + 2] = regs[destinationReg] >> 16 & 255;
+        mem[result + 3] = regs[destinationReg] >> 32 & 255;
+        stringInstr = "STR ";
+    }
+    else {
+        regs[destinationReg] = mems[result];
+        regs[destinationReg] |= mems[result + 1] << 8;
+        regs[destinationReg] |= mems[result + 2] << 16;
+        regs[destinationReg] |= mems[result + 3] << 32;
+        stringInstr = "LDR ";
+    }
+    stringInstr += 'R' + destinationReg + ",[R13] #" + immediate + ']';
     printInstruction(stringInstr);
 }
