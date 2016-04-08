@@ -56,7 +56,8 @@ function simulate(instr) {
                 SPloadStore(instr);
 
         case 0b101: // format 12 & 13 &  14
-			if((instr >> 8 & 010110000) == 010110000) addOffsetStackPointer(instr); // format 13
+            //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
+			if((instr >> 8 & 010110000) == 010110000) addOffsetStackPointer(instr); // format 
             else { 
                 if (instr >> 12 & 1 == 1) {
                     pushPopRegisters(instr); // format 14
@@ -66,9 +67,14 @@ function simulate(instr) {
                 } 
             break;
 
-        case 0b110: // format 16 & 17
+        case 0b110: // format 15 & 16 & 17
 			if((instr>>8 & 0b11111) == 0b11111) softwareInterrupt(instr); // format 17
-			else conditionalBranch(instr); // format 16
+			else {
+                 if ((instr >> 12 & 1) == 1)
+                    conditionalBranch(instr); // format 16
+                 else 
+                    multLoadStore(instr); // format 15
+            }
             break;
 
         case 0b111: // format 18 & 19
@@ -422,15 +428,23 @@ function loadAddress(instr) {
     var destinationReg = intsr >> 8 & 0b111;
     var stringInstr = "ADD R";
     if (inst >> 11 & 1 == 0) {
-        regs[destinationReg] = immediate + regs[15];
+        regs[destinationReg] = mems[immediate + regs[15]];
+        regs[destinationReg] = mems[immediate + regs[15] + 1] << 8;
+        regs[destinationReg] = mems[immediate + regs[15] + 2] << 16;
+        regs[destinationReg] = mems[immediate + regs[15] + 3] << 32;
         stringInstr += destinationReg + ", R15, #" + immediate;
     }
     else {
-        regs[destinationReg] = immediate + regs[13];
+        regs[destinationReg] = mems[immediate + regs[13]];
+        regs[destinationReg] = mems[immediate + regs[13] + 1] << 8;
+        regs[destinationReg] = mems[immediate + regs[13] + 2] << 16;
+        regs[destinationReg] = mems[immediate + regs[13] + 3] << 32;
         stringInstr += destinationReg + ", R13, #" + immediate;
     }
     printInstruction(stringInsr);
 }
 
-
+// format 15
+function multLoadStore(instr) {
+}
 
