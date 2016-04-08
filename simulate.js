@@ -1,8 +1,7 @@
-var mem = new Uint8Array(1024);
+var mem = new Uint8Array(2048);
 var regs = new Int32Array(16);
 
-regs[15] = 2; // set program counter 2 since its always 2 instructions ahaed of what we execture
-var codeSegment; // 16 bit unsigned array, containing instructions to execute
+regs[15] = 4; // set program counter 2 since its always 2 instructions ahaed of what we execture
 var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
 // conditons flags for implemented formats 1-4 not implemented
 
@@ -15,22 +14,25 @@ function stop(){
 }
 // executes of statement
 function step(){
-    if(regs-2 < codeSegment.length){
-        simulate(codeSegment[pc-2]);
-        regs[15] += 1; // increment by one
+    "use strict";
+    
+    var instrLoc = regs[15]-4;
+    if(instrLoc < mem.length){
+        var instr = mem[instrLoc] | mem[instrLoc+1]<<8
+        simulate(instr);// load upper and lower part of half word instruction
+        regs[15] += 2; // increment by one
+        console.log('instr decimal rep'+instr);
     }else{ // disable buttons of step and start since execution finished
-
+        console.log('program execution done');
     }
 }
 
-
 function simulate(instr) {
     "use strict";
-    var fmt = intr>>13; // discard all but last 3 bits used for format identification
-
+    var fmt = instr>>13; // discard all but last 3 bits used for format identification
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
-			(instr >> 11 & 3) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
+			(instr >> 11 & 0b11) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
 		  break;
 
         case 0b001: // arithmetic operations with immediate value
@@ -101,24 +103,24 @@ function moveShiftedRegister(instr){
     var offset = instr>>6 & 0b11111; // extract offset
     var destinationReg = instr & 0b111;
     var sourceReg = instr>>3 & 0b111;
-    var opcode = intr>>11 & 0b11;
+    var opcode = instr>>11 & 0b11;
     var stringInstr; // string representation of instruction
     switch(opcode){
         case 0:
             regs[destinationReg] = regs[sourceReg]<<offset; // left arthmetic shift
-            stringInstr = concatArgs('MOVS','R',destinationReg
-                                     ,',','R',sourceReg,',','LSL#',offset);
+            stringInstr = concatArgs('LSL ','R',destinationReg
+                                     ,',','R',sourceReg,',','#',offset);
             break;
         case 1:
             regs[destinationReg] = regs[sourceReg]>>>offset; // right logical shift
 
-            stringInstr = concatArgs('MOVS','R',destinationReg
-                                     ,',','R',sourceReg,',','LSR#',offset);
+            stringInstr = concatArgs('LSR ','R',destinationReg
+                                     ,',','R',sourceReg,',','#',offset);
             break;
         case 2:
             regs[destinationReg] = regs[sourceReg]>>offset; // right arithmetic shift
-            stringInstr = concatArgs('MOVS','R',destinationReg
-                                     ,',','R',sourceReg,',','ASR#',offset);
+            stringInstr = concatArgs('ASR ','R',destinationReg
+                                     ,',','R',sourceReg,',','#',offset);
             break;
         default:
             console.log('move shifted register unknown operation');
@@ -130,7 +132,7 @@ function moveShiftedRegister(instr){
 // format 3,  condition codes not written
 function arithmeticImediate(instr){
     "use strict";
-    var offset8 = instr&0b1111111;
+    var offset8 = instr&0xff;
     var destinationReg = instr>>8 & 0b111;
     var opCode = instr>>11 & 0b11;
     var stringInstr;
@@ -138,7 +140,7 @@ function arithmeticImediate(instr){
         case 0:
             regs[destinationReg] = offset8;
             stringInstr = concatArgs('MOVS ','R',
-                                     destinationReg,',#',offset);
+                                     destinationReg,',#',offset8);
             break;
         case 1:
             if(regs[destinationReg] == offset8)
@@ -267,7 +269,7 @@ function loadStoreRegisterOffset(instr){
         if( (instr>>10) & 1 == 0){ // save the rest of word
           mem[offsetReg+baseRegister+1] = regs[registerSDNum]>>8 & 255;
           mem[offsetReg+baseRegister+2] = regs[registerSDNum]>>16 & 255;
-          mem[offsetReg+baseRegister+3] = regs[registerSDNum]>>24 & 255;  
+          mem[offsetReg+baseRegister+3] = regs[registerSDNum]>>24 & 255;
           stringInstr = 'STRB';//  save one byte and return
         }else
             stringInstr = 'STR';
@@ -276,7 +278,7 @@ function loadStoreRegisterOffset(instr){
         if( (instr>>10 & 1) == 0){
             regs[registerSDNum] |= mem[offsetReg+baseRegister+1]<<8; // load bits intro appropriate positons
             regs[registerSDNum] |= mem[offsetReg+baseRegister+2]<<16;
-            regs[registerSDNum] |= mem[offsetReg+baseRegister+3]<<24;   
+            regs[registerSDNum] |= mem[offsetReg+baseRegister+3]<<24;
             stringInstr = 'LDR';
         }else
             stringInstr = 'LDRB';
@@ -297,7 +299,7 @@ function loadStoreWithImmOffset(instr){
         if( (instr>>12) & 1 == 0){ // save the rest of word
           mem[offset5+baseRegister+1] = regs[registerSDNum]>>8 & 255;
           mem[offset5+baseRegister+2] = regs[registerSDNum]>>16 & 255;
-          mem[offset5+baseRegister+3] = regs[registerSDNum]>>24 & 255;  
+          mem[offset5+baseRegister+3] = regs[registerSDNum]>>24 & 255;
           stringInstr = 'STRB';//  save one byte and return
         }else
             stringInstr = 'STR';
@@ -306,7 +308,7 @@ function loadStoreWithImmOffset(instr){
         if( (instr>>10 & 1) == 0){
             regs[registerSDNum] |= mem[offset5+baseRegister+1]<<8; // load bits intro appropriate positons
             regs[registerSDNum] |= mem[offset5+baseRegister+2]<<16;
-            regs[registerSDNum] |= mem[offset5+baseRegister+3]<<24;   
+            regs[registerSDNum] |= mem[offset5+baseRegister+3]<<24;
             stringInstr = 'LDR';
         }else
             stringInstr = 'LDRB';
@@ -317,9 +319,9 @@ function loadStoreWithImmOffset(instr){
 //format 13
 function addOffsetStackPointer(instr){
     var immediate = instr & 0x3f;
-    if((instr>>7&1) == 1))
+    if((instr>>7&1) == 1)
         immediate = -immediate;
-    reg[13] += immediate;
+    regs[13] += immediate;
     printInstruction('ADD SP,#',immediate);
 }
 function unconditionalBranch(instr){
@@ -334,7 +336,7 @@ function conditionalBranch(instr){
 }
 // concatinates all strings and integers into a string
 function concatArgs(){
-    var str;
+    var str = '';
     for (var i = 0; i < arguments.length; i++) {
         str = str + arguments[i];
     }
@@ -342,9 +344,13 @@ function concatArgs(){
 }
 // format 14
 function pushPopRegisters(instr){
-    
+
 }
 
 function terminateProgram(status){
 
+}
+
+function softwareInterrupt(instr){
+    
 }

@@ -35,6 +35,7 @@ function hideDropBox(){
 }
 
 function readFileContent(event){
+    "use strict";
     var file = event.target.files[0];
     
     if(file){
@@ -42,7 +43,12 @@ function readFileContent(event){
         
         reader.onload = function(e){
             var contents = e.target.result;
-            codeSegment = new Uint16Array(contents);
+            var program = new Uint8Array(contents);
+            
+            for(var i = 0; i < program.length;i++)
+                mem[i] = program[i]; // temp fix
+            
+            setBeginningConfig();
             notify('Success','File read');
         }
         reader.readAsArrayBuffer(file);
@@ -50,6 +56,21 @@ function readFileContent(event){
         alert('Failed to load file');
     }
     hideDropBox();
+}
+
+function resizeUint8(baseArrayBuffer, newByteSize) {
+    var resizedArrayBuffer = new ArrayBuffer(newByteSize),
+        len = baseArrayBuffer.byteLength,
+        resizeLen = (len > newByteSize)? newByteSize : len;
+    
+        (new Uint8Array(resizedArrayBuffer, 0, resizeLen)).set(new Uint8Array(baseArrayBuffer, 0, resizeLen));
+
+    return resizedArrayBuffer;
+}
+
+function setBeginningConfig(){
+    regs[13] = mem[0] | mem[1]<<8 | mem[2]<<16 | mem[3]<<24;
+    regs[15] = (mem[4] | mem[5]<<8 | mem[6]<<16 | mem[7]<<24) + 4; // point two words ahead
 }
 
 function addEventListeners(){
