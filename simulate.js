@@ -55,10 +55,15 @@ function simulate(instr) {
             else
                 SPloadStore(instr);
 
-        case 0b101: // format 13 &  14
-			if((instr >> 11 & 0b10) == 0b10) addOffsetStackPointer(instr); // format 13
-            else
-                pushPopRegisters(instr); // format 14
+        case 0b101: // format 12 & 13 &  14
+			if((instr >> 8 & 010110000) == 010110000) addOffsetStackPointer(instr); // format 13
+            else { 
+                if (instr >> 12 & 1 == 1) {
+                    pushPopRegisters(instr); // format 14
+            }   else {
+                    loadAdress(instr);
+                    }
+                } 
             break;
 
         case 0b110: // format 16 & 17
@@ -392,7 +397,7 @@ function SPloadStore(instr){
     var immediate = instr & 0b11111111;
     var destinationReg = instr >> 8 & 0b111;
     var result = immediate + reg[13];
-    varstringInstr;
+    var stringInstr;
     if (instr >> 11 & 1 == 0) {
         mem[result] = regs[destinationReg] & 255;
         mem[result + 1] = regs[destinationReg] >> 8 & 255;
@@ -410,3 +415,22 @@ function SPloadStore(instr){
     stringInstr += 'R' + destinationReg + ",[R13] #" + immediate + ']';
     printInstruction(stringInstr);
 }
+
+// format 12
+function loadAddress(instr) {
+    var immediate = instr & 0b11111111;
+    var destinationReg = intsr >> 8 & 0b111;
+    var stringInstr = "ADD R";
+    if (inst >> 11 & 1 == 0) {
+        regs[destinationReg] = immediate + regs[15];
+        stringInstr += destinationReg + ", R15, #" + immediate;
+    }
+    else {
+        regs[destinationReg] = immediate + regs[13];
+        stringInstr += destinationReg + ", R13, #" + immediate;
+    }
+    printInstruction(stringInsr);
+}
+
+
+
