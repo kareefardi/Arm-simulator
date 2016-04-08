@@ -49,6 +49,12 @@ function simulate(instr) {
 			loadStoreWithImmOffset(instr);
             break;
 
+        case 0b100: // format 10 & 11
+            if(instr >> 12 == (0b1000))
+                loadStoreHalfword(instr);
+            else
+                SPloadStore(instr);
+
         case 0b101: // format 13 &  14
 			if((instr >> 11 & 0b10) == 0b10) addOffsetStackPointer(instr); // format 13
             else
@@ -176,7 +182,7 @@ function alu(instr){
     var sourceReg = instr>>3 & 0b111;
     var opcode = instr>>6 & 0b1111;
     var stringInstr;
-    switch(instr){
+    switch(opcode){
         case 0: // overflow detection not implemented
             regs[destinationReg] += regs[sourceReg];
             stringInstr = 'AND R'+destinationReg+',R'+sourceReg;
@@ -215,17 +221,23 @@ function alu(instr){
         case 8:// TST
             /* carryflag calculation not clear yet, overflow flag not affected by TST instruction
             var result = regs[destinationReg]&regs[sourceReg];
-            zeroFlag = result ? 1 : 0;
+            zeroFlag = result ? 1 : 0; // shouldnt zero flag = 1 when result = 0?
             negativeFlag = result < 0 ? 1 : 0;
             stringInstr = 'TSR';
+            //The carry flag is updated to the last bit shifted out of Rm
             */
             break;
         case 9:
             regs[destinationReg] = -regs[sourceReg];
             stringInstr = 'NEG R'+destinationReg+',R'+sourceReg;
             break;
-        case 10:
+        case 10://CMP
+            /*var result = regs[destinationReg] - regs[sourceReg];
+            zeroFlag = !(result);
+            negativeFlag = result < 0 ? 1 : 0;
+            carryFlag = 
             break;
+            */
         case 11:
             break;
         case 12:
@@ -353,4 +365,25 @@ function terminateProgram(status){
 
 function softwareInterrupt(instr){
     
+}
+// format 10
+function loadStoreHalfword(instr){
+    'use strict';
+    var offset5 = instr>>6&0b11111;
+    var baseRegisterIndex = instr>>3&0b111;// array index
+    var baseRegister = regs[baseRegisterIndex]; // regs value
+    var registerSDNum = instr&0b111; // source/destination register index
+    var stringInstr;
+    if(instr>>11 & 1 == 0){ // checking L whether store or load
+        mem[offsetReg+offset5] = registerSDNum&255; // get only first 8 bits
+        mem[offset5+baseRegister+1] = regs[registerSDNum]>>8 & 255;
+        stringInstr = 'STRH';//  save one byte and return
+        }
+    else{
+        regs[registerSDNum] = mem[offset5+baseRegister];
+        regs[registerSDNum] |= mem[offset5+baseRegister+1]<<8; // load bits intro appropriate positons
+        stringInstr = 'LDRH';
+        }
+    stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',#'+offset5+']';
+    printInstruction(stringInstr);
 }
