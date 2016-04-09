@@ -1,3 +1,6 @@
+var STACK_POINTER = 13;// stack pointer index
+var LR = 14; // link and return index
+var PC = 15;
 var mem = new Uint8Array(2048);
 var regs = new Int32Array(16);
 
@@ -22,6 +25,7 @@ function step(){
         simulate(instr);// load upper and lower part of half word instruction
         regs[15] += 2; // increment by one
         console.log('instr decimal rep'+instr);
+        printRegisterContent(regs);
     }else{ // disable buttons of step and start since execution finished
         console.log('program execution done');
     }
@@ -281,8 +285,8 @@ function pcRelativeLoad(instr){
 // format 7
 function loadStoreRegisterOffset(instr){
     'use strict';
-    var offsetRegIndex = instr>>3&0b111;
-    var baseRegisterIndex = instr>>6&0b111;// array index
+    var offsetRegIndex = instr>>6&0b111;
+    var baseRegisterIndex = instr>>3&0b111;// array index
     var offsetReg = regs[offsetRegIndex];
     var baseRegister = regs[baseRegisterIndex]; // regs value
     var registerSDNum = instr&0b111; // source/destination register index
@@ -309,7 +313,7 @@ function loadStoreRegisterOffset(instr){
     stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',R'+offsetRegIndex+']';
     printInstruction(stringInstr);
 }
-// format 9 // now has format 7 code
+// format 9 
 function loadStoreWithImmOffset(instr){
     'use strict';
     var offset5 = instr>>3&0b111;
@@ -351,9 +355,11 @@ function unconditionalBranch(instr){
     var offsetvalue= instr >> 10 & 0b1111111111;    //extract offset value
         offsetvalue=offsetvalue-2;  //to account for pc increment
 }
+// format 19
 function longBranchWithLink(instr){
 
 }
+//format 16
 function conditionalBranch(instr){
 
 }
@@ -367,7 +373,52 @@ function concatArgs(){
 }
 // format 14
 function pushPopRegisters(instr){
-
+    "use strict";
+    var instrString = '';
+    if(instr>>11 & 1 == 0){ // push regs
+        instrString = 'PUSH{ ';
+        for(var i = 0; i < 8;i++){
+            if(instr>>i & 1 == 1){
+                regs[STACK_POINTER] -= 4;
+                mem[regs[STACK_POINTER]] = regs[i]>>8 & 255;
+                mem[regs[STACK_POINTER]+1] = regs[i]>>8 & 255;
+                mem[regs[STACK_POINTER]+2] = regs[i]>>16 & 255;
+                mem[regs[STACK_POINTER]+3] = regs[i]>>24 & 255;
+                instrString += 'R'+i+',';
+            }
+        }
+        if(instr>>8 & 1 == 1){ // save lr reg
+            regs[STACK_POINTER] -= 4;
+            mem[regs[STACK_POINTER]] = regs[LR]>>8 & 255;
+            mem[regs[STACK_POINTER]+1] = regs[LR]>>8 & 255;
+            mem[regs[STACK_POINTER]+2] = regs[LR]>>16 & 255;
+            mem[regs[STACK_POINTER]+3] = regs[LR]>>24 & 255;
+            instrString += 'R'+LR;
+        }
+    }else{ // pop regs
+        instrString = 'POP{ ';
+        for(var i = 0; i < 8;i++){
+            if(instr>>i & 1 == 1){
+                regs[i]  = mem[regs[STACK_POINTER]];
+                regs[i] |= mem[regs[STACK_POINTER]+1]<<8;
+                regs[i] |= mem[regs[STACK_POINTER]+2]<<16;
+                regs[i] |= mem[regs[STACK_POINTER]+3]<<24;
+                regs[STACK_POINTER] += 4;
+                instrString += 'R'+i+',';
+            }
+        }
+        if(instr>>8 & 1 == 1){
+                regs[PC]  = mem[regs[STACK_POINTER]];
+                regs[PC] |= mem[regs[STACK_POINTER]+1]<<8;
+                regs[PC] |= mem[regs[STACK_POINTER]+2]<<16;
+                regs[PC] |= mem[regs[STACK_POINTER]+3]<<24;
+                regs[STACK_POINTER] += 4;
+                instrString += 'R'+PC;
+         }
+    }
+    if(instrString.length == instrString.lastIndexOf(','))
+        instrString = instrString.substr(0,instrString-1); // remove last comma
+    printInstruction(instrString+'}');
 }
 
 function terminateProgram(status){
