@@ -5,7 +5,7 @@ var mem = new Uint8Array(2048);
 var regs = new Int32Array(16);
 
 regs[15] = 4; // set program counter 2 since its always 2 instructions ahaed of what we execture
-var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflow = 0;
+var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflowFlag = 0;
 // conditons flags for implemented formats 1-4 not implemented
 
 function start(){
@@ -18,7 +18,7 @@ function stop(){
 // executes of statement
 function step(){
     "use strict";
-    
+
     var instrLoc = regs[15]-4;
     if(instrLoc < mem.length){
         var instr = mem[instrLoc] | mem[instrLoc+1]<<8
@@ -61,14 +61,14 @@ function simulate(instr) {
 
         case 0b101: // format 12 & 13 &  14
             //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
-			if((instr >> 8 & 010110000) == 010110000) addOffsetStackPointer(instr); // format 
-            else { 
+			if((instr >> 8 & 010110000) == 010110000) addOffsetStackPointer(instr); // format
+            else {
                 if (instr >> 12 & 1 == 1) {
                     pushPopRegisters(instr); // format 14
             }   else {
                     loadAdress(instr);
                     }
-                } 
+                }
             break;
 
         case 0b110: // format 15 & 16 & 17
@@ -76,7 +76,7 @@ function simulate(instr) {
 			else {
                  if ((instr >> 12 & 1) == 1)
                     conditionalBranch(instr); // format 16
-                 else 
+                 else
                     multLoadStore(instr); // format 15
             }
             break;
@@ -250,7 +250,7 @@ function alu(instr){
             /*var result = regs[destinationReg] - regs[sourceReg];
             zeroFlag = !(result);
             negativeFlag = result < 0 ? 1 : 0;
-            carryFlag = 
+            carryFlag =
             break;
             */
         case 11:
@@ -313,7 +313,7 @@ function loadStoreRegisterOffset(instr){
     stringInstr += ' R,'+registerSDNum+'[R'+baseRegisterIndex+',R'+offsetRegIndex+']';
     printInstruction(stringInstr);
 }
-// format 9 
+// format 9
 function loadStoreWithImmOffset(instr){
     'use strict';
     var offset5 = instr>>3&0b111;
@@ -361,7 +361,72 @@ function longBranchWithLink(instr){
 }
 //format 16
 function conditionalBranch(instr){
-
+    "use strict";
+    var instrString = '';
+    var cond = instr>>8 & 0xf;
+    var offset = instr & 0xff;
+    switch(cond){
+        case 0;
+            if(zeroFlag == 1)  regs[PC] += (offset)*4;
+            instrString = 'BEQ';
+            break;
+        case 1:
+            if(zeroFlag  == 0) regs[PC] += (offset)*4;
+            instrString = 'BNE';
+            break;
+        case 2:
+            if(carryFlag == 1) regs[PC] += (offset)*4;
+            instrString = 'BCS';
+            break;
+        case 3:
+            if(carryFlag == 0) regs[PC] += (offset)*4;
+            instrString = 'BCC';
+            break;
+        case 4:
+            if(negativeFlag == 1) regs[PC] += (offset)*4;
+            instrString = 'BMI';
+            break;
+        case 5:
+            if(negativeFlag == 0) regs[PC] += (offset)*4;
+            instrString = 'BPL';
+            break;
+        case 6:
+            if(overflowFlag == 1) regs[PC] += (offset)*4;
+            instrString = 'BVS';
+            break;
+        case 7:
+            if(overflowFlag == 0) regs[PC] += (offset)*4;
+            instrString = 'BCS';
+            break;
+        case 8:
+            if(carryFlag == 1 && zeroFlag == 0) regs[PC] += (offset)*4;
+            instrString = 'BHI';
+            break;
+        case 9:
+            if(carryFlag == 0 || zeroFlag == 1) regs[PC] += (offset)*4;
+            instrString = 'BLS';
+            break;
+        case 10:
+            if(negativeFlag == overflowFlag) regs[PC] += (offset)*4;
+            instrString = 'BGE';
+            break;
+        case 11:
+            if(negativeFlag != overflowFlag) regs[PC] += (offset)*4;
+            instrString = 'BLT';
+            break;
+        case 12:
+            if(zeroFlag == 0 && (negativeFlag == overflowFlag))
+                regs[PC] += (offset)*4;
+            instrString = 'BGT';
+            break;
+        case 13:
+            if(zeroFlag == 1 || negativeFlag == overflowFlag)
+                regs[PC] += (offset)*4;
+            instrString = 'BLE';
+            break;
+    }
+    instrString += ' ' + offset;
+    printInstruction(instrString);
 }
 // concatinates all strings and integers into a string
 function concatArgs(){
@@ -424,11 +489,12 @@ function pushPopRegisters(instr){
 function terminateProgram(status){
 
 }
-
+// format 17
 function softwareInterrupt(instr){
-    
+
 }
-// format 10
+/*
+// format 10 not required
 function loadStoreHalfword(instr){
     'use strict';
     var offset5 = instr>>6&0b11111;
@@ -448,8 +514,9 @@ function loadStoreHalfword(instr){
         }
     stringInstr += ' R'+registerSDNum+' ,[R'+baseRegisterIndex+',#'+offset5+']';
     printInstruction(stringInstr);
-}
-// format 11
+} */
+/*
+// format 11 not required
 function SPloadStore(instr){
     var immediate = instr & 0b11111111;
     var destinationReg = instr >> 8 & 0b111;
@@ -471,9 +538,9 @@ function SPloadStore(instr){
     }
     stringInstr += 'R' + destinationReg + ",[R13] #" + immediate + ']';
     printInstruction(stringInstr);
-}
-
-// format 12
+} */
+/*
+// format 12 not required
 function loadAddress(instr) {
     var immediate = instr & 0b11111111;
     var destinationReg = intsr >> 8 & 0b111;
@@ -493,9 +560,4 @@ function loadAddress(instr) {
         stringInstr += destinationReg + ", R13, #" + immediate;
     }
     printInstruction(stringInsr);
-}
-
-// format 15
-function multLoadStore(instr) {
-}
-
+} */
