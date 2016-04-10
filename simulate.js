@@ -162,6 +162,11 @@ function arithmeticImediate(instr){
             regs[destinationReg] = offset8;
             stringInstr = concatArgs('MOVS ','R',
                                      destinationReg,',#',offset8);
+            
+            zeroFlag = Number(offset8 == 0);
+            offset8 < 0 ? negativeFlag = 1 : negativeFlag = 0;
+            carryFlag = overflowFlag = 0;
+            
             break;
         case 1:
             if(regs[destinationReg] == offset8)
@@ -172,8 +177,8 @@ function arithmeticImediate(instr){
                 negativeFlag = 1;
             else
                 negativeFlag = 0;
-         //   carryFlag = overflow = 0;
-            // implement comparison
+            overflowFlag = isAddOverflowing(regs[destinationReg],-offset8);
+            carryFlag = 0;
             stringInstr = concatArgs('CMP ','R',
                                      destinationReg,',#',offset);
             break;
@@ -181,11 +186,23 @@ function arithmeticImediate(instr){
             regs[destinationReg] = regs[destinationReg] + offset8;
             stringInstr = concatArgs('ADDS ','R',
                     destinationReg,',R',destinationReg,',#',offset);
+            
+            overflowFlag = isAddOverflowing(regs[destinationReg],offset8);
+            regs[destinationReg] < 0 ? overflowFlag = 1 : overflowFlag = 0;
+            zeroFlag = Number(regs[destinationReg] == 0);
+            carryFlag  = 0;
+            
+            
             break;
         case 3:
             regs[destinationReg] = regs[destinationReg] - offset8;
             stringInstr = concatArgs('SUBS ','R',
                     destinationReg,',R',destinationReg,',#',offset);
+            
+            overflowFlag = isAddOverflowing(regs[destinationReg],-offset8);
+            carryFlag = 0;
+            stringInstr = concatArgs('CMP ','R',
+                                     destinationReg,',#',offset);
             break;
     }
     printInstruction(stringInstr);
@@ -351,13 +368,17 @@ function addOffsetStackPointer(instr){
     regs[13] += immediate;
     printInstruction('ADD SP,#',immediate);
 }
+//format 18
 function unconditionalBranch(instr){
     var offsetvalue= instr >> 10 & 0b1111111111;    //extract offset value
         offsetvalue=offsetvalue-2;  //to account for pc increment
 }
-// format 19
+// format 19 // not implemented yet
 function longBranchWithLink(instr){
-
+    var offset = (instr&0x3ff);
+        
+    if(instr>>11 & 1 == 1)
+    else offset = (instr&0x3ff);
 }
 //format 16
 function conditionalBranch(instr){
@@ -485,7 +506,7 @@ function pushPopRegisters(instr){
         instrString = instrString.substr(0,instrString-1); // remove last comma
     printInstruction(instrString+'}');
 }
-
+// disables step and start buttons
 function terminateProgram(status){
 
 }
@@ -561,3 +582,8 @@ function loadAddress(instr) {
     }
     printInstruction(stringInsr);
 } */
+// determines if answer will overflow
+function isAddOverflowing(x,y){
+    var result = Number(x)+Number(y);
+    return Number(result != (x+y));
+}
