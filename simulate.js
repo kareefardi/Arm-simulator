@@ -214,22 +214,37 @@ function alu(instr){
     var sourceReg = instr>>3 & 0b111;
     var opcode = instr>>6 & 0b1111;
     var stringInstr;
+    
     switch(opcode){
         case 0: // overflow detection not implemented
-            regs[destinationReg] += regs[sourceReg];
+            regs[destinationReg] = regs[destinationReg] & regs[sourceReg];
             stringInstr = 'AND R'+destinationReg+',R'+sourceReg;
+            
+            overflowFlag = carryFlag = 0;
+            negativeFlag = Number(regs[destinationReg] < 0);
+            zeroFlag = Number(regs[destinationReg] == 0);
             break;
         case 1:
             regs[destinationReg] ^= regs[sourceReg];
             stringInstr = 'EOR R'+destinationReg+',R'+sourceReg;
+            
+            overflowFlag = carryFlag = 0;
+            negativeFlag = Number(regs[destinationReg] < 0);
+            zeroFlag = Number(regs[destinationReg] == 0);
             break;
         case 2:
             regs[destinationReg] = regs[destinationReg]<<regs[sourceReg];
             stringInstr = 'LSL R'+destinationReg+',R'+sourceReg;
+            
             break;
         case 3:
             regs[destinationReg] = regs[destinationReg]>>regs[sourceReg];
             stringInstr = 'LSR R'+destinationReg+',R'+sourceReg;
+            
+            overflowFlag = carryFlag = 0;
+            negativeFlag = Number(regs[destinationReg] < 0);
+            zeroFlag = Number(regs[destinationReg] == 0);
+            
             break;
         case 4:
             regs[destinationReg] = regs[destinationReg]>>>regs[sourceReg];
@@ -242,7 +257,7 @@ function alu(instr){
         case 6:
             regs[destinationReg] -= regs[sourceReg];
             regs[destinationReg] -= (~carryFlag)&1; // and with one since carry flag should be 1 bit amd carryhere is i
-            stringInstr = 'SBCs';
+            stringInstr = 'SBC R'++destinationReg+',R'+sourceReg;
             break;
         case 7:// rotate right
             var tmp = regs[destinationReg]>>regs[sourceReg];
@@ -251,26 +266,31 @@ function alu(instr){
             stringInstr = 'ROR R'+destinationReg+',R'+sourceReg;
             break;
         case 8:// TST
-            /* carryflag calculation not clear yet, overflow flag not affected by TST instruction
-            var result = regs[destinationReg]&regs[sourceReg];
-            zeroFlag = result ? 1 : 0; // shouldnt zero flag = 1 when result = 0?
+            var result = regs[destinationReg] & regs[sourceReg];
+            zeroFlag = result == 1 ? 1 : 0; // shouldnt zero flag = 1 when result = 0?
             negativeFlag = result < 0 ? 1 : 0;
             stringInstr = 'TSR';
-            //The carry flag is updated to the last bit shifted out of Rm
-            */
+            overflowFlag = carryFlag = 0;
             break;
         case 9:
             regs[destinationReg] = -regs[sourceReg];
             stringInstr = 'NEG R'+destinationReg+',R'+sourceReg;
             break;
         case 10://CMP
-            /*var result = regs[destinationReg] - regs[sourceReg];
-            zeroFlag = !(result);
+            var result = regs[destinationReg] - regs[sourceReg];
+            zeroFlag = Number(result == 0);
+            
             negativeFlag = result < 0 ? 1 : 0;
-            carryFlag =
+            carryFlag = 0;
+            overflowFlag = isAddOverflowing(regs[destinationReg],-regs[sourceReg]);
             break;
-            */
         case 11:
+            var result = regs[destinationReg] - regs[sourceReg];
+            zeroFlag = Number(result == 0);
+            
+            negativeFlag = result < 0 ? 1 : 0;
+            carryFlag = 0;
+            overflowFlag = isAddOverflowing(regs[destinationReg],-regs[sourceReg]);
             break;
         case 12:
             regs[destinationReg] |= regs[sourceReg];
