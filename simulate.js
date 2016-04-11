@@ -527,7 +527,7 @@ function pushPopRegisters(instr){
             mem[regs[STACK_POINTER]+1] = regs[LR]>>8 & 255;
             mem[regs[STACK_POINTER]+2] = regs[LR]>>16 & 255;
             mem[regs[STACK_POINTER]+3] = regs[LR]>>24 & 255;
-            instrString += 'R'+','+LR;
+            instrString += 'LR';
         }
     }else{ // pop regs
         instrString = 'POP{ ';
@@ -547,7 +547,7 @@ function pushPopRegisters(instr){
                 regs[PC] |= mem[regs[STACK_POINTER]+2]<<16;
                 regs[PC] |= mem[regs[STACK_POINTER]+3]<<24;
                 regs[STACK_POINTER] += 4;
-                instrString += 'R'+','+PC;
+                instrString += 'PC';
          }
     }
     if(instrString.length == instrString.lastIndexOf(','))
