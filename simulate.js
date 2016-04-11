@@ -390,12 +390,24 @@ function addOffsetStackPointer(instr){
 }
 //format 18
 function unconditionalBranch(instr){
-    var offsetvalue= instr >> 10 & 0b1111111111;    //extract offset value
-        offsetvalue=offsetvalue-2;  //to account for pc increment
+    var offset5 = instr & 0x3ff;
+    var stringInstr = "B" + (offset5 * 2);
+    regs[PC] += offset5 * 2 ;
+    printInstruction(stringInstr);
 }
+
 // format 19 // not implemented yet
 function longBranchWithLink(instr){
-    
+    var stringInstr = "BL";
+    var offset = instr & 0x7ff;
+    if ((instr >> 11 & 1) == 0) {
+        regs[LR] = regs[PC] + offset * 4096;
+    }
+    else {
+        var tmp = regs[PC] - 1;
+        regs[PC] = regs[LR] + offset * 2;
+        regs[LR] = tmp | 1;
+    }
 }
 //format 16
 function conditionalBranch(instr){
