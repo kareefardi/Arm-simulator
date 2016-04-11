@@ -24,16 +24,21 @@ function step(){
         var instr = mem[instrLoc] | mem[instrLoc+1]<<8
         simulate(instr);// load upper and lower part of half word instruction
         regs[15] += 2; // increment by one
-        console.log('instr decimal rep'+instr);
+        console.log('instr '+instr);
         printRegisterContent(regs);
     }else{ // disable buttons of step and start since execution finished
         console.log('program execution done');
     }
 }
+// returns binary format of decimal numbers
+function dec2bin(dec){
+    return (dec >>> 0).toString(2);
+}
 
 function simulate(instr) {
     "use strict";
     var fmt = instr>>13; // discard all but last 3 bits used for format identification
+    console.log('simulate case '+fmt);
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
 			(instr >> 11 & 0b11) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
@@ -44,11 +49,13 @@ function simulate(instr) {
             break;
 
         case 0b010: // format 4 & 6 & 7
-			if (isntr >> 10 & (0b010000) == (0b010000)) alu(instr); // alu operations format 4
-			else if (isntr >> 11 & (0b01001) == (0b01001)) pcRelativeLoad(instr); // format 6
-			else if (instr >> 12 & (0b0101) == (0b0101)) loadStoreRegisterOffset(instr); // format 7
+			if (instr >> 10 == 0x1f) 
+                alu(instr); // alu operations format 4
+			else if (instr >> 11 & (0b01001) == (0b01001))
+                pcRelativeLoad(instr); // format 6
+			else if (instr >> 12 & (0b0101) == (0b0101))
+                loadStoreRegisterOffset(instr); // format 7
             break;
-
         case 0b011: // format 9
 			loadStoreWithImmOffset(instr);
             break;
@@ -212,8 +219,10 @@ function alu(instr){
     "use strict";
     var destinationReg = instr & 0b111;
     var sourceReg = instr>>3 & 0b111;
-    var opcode = instr>>6 & 0b1111;
+    var opcode = instr>>6 & 0xf;
     var stringInstr;
+    
+    console.log('alu called');
     
     switch(opcode){
         case 0: // overflow detection not implemented
