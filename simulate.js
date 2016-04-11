@@ -68,7 +68,7 @@ function simulate(instr) {
 
         case 0b101: // format 12 & 13 &  14
             //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
-			if((instr >> 8 & 0b010110000) == 0b010110000) addOffsetStackPointer(instr); // format
+			if((instr >> 8 & 0b10110000) == 0b10110000) addOffsetStackPointer(instr); // format
             else {
                 if (instr >> 12 & 1 == 1) {
                     pushPopRegisters(instr); // format 14
@@ -103,25 +103,33 @@ function simulate(instr) {
 //format 2
 function addSubtract(instr){
     "use strict";
-    var offsetNReg = instr>>6 & 0b11111; // register id or immediate value depending
+    var offsetNReg = instr>>6 & 0b111; // register id or immediate value depending
     var destinationReg = instr & 0b111;     // on op immediate flag
     var sourceReg = instr>>3 & 0b111;
     var immediateFlag = instr>>10 & 0b1;
     var opCode = instr>>9 & 0b1;
+    var stringInstr;
 
     if(opCode == 0){ // add
-         if(immediateFlag == 1){
+        stringInstr = "ADD R" + destinationReg + ", R" + sourceReg + ", R" + sourceReg;
+        if(immediateFlag == 1){
+            stringInstr += ", #" + offsetNReg;
             regs[destinationReg] =  regs[sourceReg] + offsetNReg;
          }else{
-          regs[destinationReg] = regs[sourceReg] + regs[offsetNReg];
+            stringInstr += ", R" + regs[offsetNReg];
+            regs[destinationReg] = regs[sourceReg] + regs[offsetNReg];
         }
     }else{ // subtract
+        stringInstr = "SUB R" + destinationReg + ", R" + sourceReg + ", R" + sourceReg;
          if(immediateFlag == 1){
+            stringInstr += ", #" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] - offsetNReg;
         }else{
+            stringInstr += ", R" + regs[offsetNReg];
             regs[destinationReg] = regs[sourceReg] - regs[offsetNReg];
         }
     }
+    printInstruction(stringInstr);
 }
 
 
@@ -191,7 +199,7 @@ function arithmeticImediate(instr){
             break;
         case 2:
             regs[destinationReg] = regs[destinationReg] + offset8;
-            stringInstr = concatArgs('ADDS ','R',
+            stringInstr = concatArgs('ADD ','R',
                     destinationReg,',R',destinationReg,',#',offset);
             
             overflowFlag = isAddOverflowing(regs[destinationReg],offset8);
@@ -203,7 +211,7 @@ function arithmeticImediate(instr){
             break;
         case 3:
             regs[destinationReg] = regs[destinationReg] - offset8;
-            stringInstr = concatArgs('SUBS ','R',
+            stringInstr = concatArgs('SUB ','R',
                     destinationReg,',R',destinationReg,',#',offset);
             
             overflowFlag = isAddOverflowing(regs[destinationReg],-offset8);
@@ -278,7 +286,7 @@ function alu(instr){
             var result = regs[destinationReg] & regs[sourceReg];
             zeroFlag = result == 1 ? 1 : 0; // shouldnt zero flag = 1 when result = 0?
             negativeFlag = result < 0 ? 1 : 0;
-            stringInstr = 'TSR';
+            stringInstr = 'TST R' + destinationReg + ', R' + sourceReg;
             overflowFlag = carryFlag = 0;
             break;
         case 9:
@@ -292,6 +300,7 @@ function alu(instr){
             negativeFlag = result < 0 ? 1 : 0;
             carryFlag = 0;
             overflowFlag = isAddOverflowing(regs[destinationReg],-regs[sourceReg]);
+            stringInstr = 'CMP R' + destinationReg + ', R' + sourceReg;
             break;
         case 11:
             var result = regs[destinationReg] - regs[sourceReg];
@@ -300,6 +309,7 @@ function alu(instr){
             negativeFlag = result < 0 ? 1 : 0;
             carryFlag = 0;
             overflowFlag = isAddOverflowing(regs[destinationReg],-regs[sourceReg]);
+            stringInstr = 'CMN R' + destinationReg + ', R' + sourceReg;
             break;
         case 12:
             regs[destinationReg] |= regs[sourceReg];
@@ -324,7 +334,7 @@ function alu(instr){
 function pcRelativeLoad(instr){
     'use strict';
     var rd = instr>>8 & 0b111;
-    var word8 = instr>>8 & 255;
+    var word8 = instr>>8 & 255; // check doc notes 
     regs[rd] = mem[word8+regs[15]];
     printInstruction('LDR R'+rd+'[PC,#'+word8+']');
 }
@@ -343,11 +353,11 @@ function loadStoreRegisterOffset(instr){
           mem[offsetReg+baseRegister+1] = regs[registerSDNum]>>8 & 255;
           mem[offsetReg+baseRegister+2] = regs[registerSDNum]>>16 & 255;
           mem[offsetReg+baseRegister+3] = regs[registerSDNum]>>24 & 255;
-          stringInstr = 'STRB';//  save one byte and return
+          stringInstr = 'STR';
         }else
-            stringInstr = 'STR';
+            stringInstr = 'STRB';
     }else{
-        regs[registerSDNum] = mem[offsetReg+baseRegister];
+        regs[registerSDNum] = mem[offsetReg+baseRegister]&255;
         if( (instr>>10 & 1) == 0){
             regs[registerSDNum] |= mem[offsetReg+baseRegister+1]<<8; // load bits intro appropriate positons
             regs[registerSDNum] |= mem[offsetReg+baseRegister+2]<<16;
@@ -362,8 +372,8 @@ function loadStoreRegisterOffset(instr){
 // format 9
 function loadStoreWithImmOffset(instr){
     'use strict';
-    var offset5 = instr>>3&0b111;
-    var baseRegisterIndex = instr>>6&0b111;// array index
+    var offset5 = instr>>6&0x3f;
+    var baseRegisterIndex = instr>>3&0b111;// array index
     var baseRegister = regs[baseRegisterIndex]; // regs value
     var registerSDNum = instr&0b111; // source/destination register index
     var stringInstr;
@@ -373,11 +383,11 @@ function loadStoreWithImmOffset(instr){
           mem[offset5+baseRegister+1] = regs[registerSDNum]>>8 & 255;
           mem[offset5+baseRegister+2] = regs[registerSDNum]>>16 & 255;
           mem[offset5+baseRegister+3] = regs[registerSDNum]>>24 & 255;
-          stringInstr = 'STRB';//  save one byte and return
+          stringInstr = 'STR';
         }else
-            stringInstr = 'STR';
+            stringInstr = 'STRB';
     }else{
-            regs[registerSDNum] = mem[offset5+baseRegister];
+            regs[registerSDNum] = mem[offset5+baseRegister]&255;
         if( (instr>>10 & 1) == 0){
             regs[registerSDNum] |= mem[offset5+baseRegister+1]<<8; // load bits intro appropriate positons
             regs[registerSDNum] |= mem[offset5+baseRegister+2]<<16;
@@ -391,7 +401,7 @@ function loadStoreWithImmOffset(instr){
 }
 //format 13
 function addOffsetStackPointer(instr){
-    var immediate = instr & 0x3f;
+    var immediate = instr & 0x7f;
     if((instr>>7&1) == 1)
         immediate = -immediate;
     regs[13] += immediate;
@@ -399,15 +409,14 @@ function addOffsetStackPointer(instr){
 }
 //format 18
 function unconditionalBranch(instr){
-    var offset5 = instr & 0x3ff;
-    var stringInstr = "B" + (offset5 * 2);
+    var offset5 = instr & 0x7ff;
+    var stringInstr = "B " + (offset5 * 2); // supposed to be label
     regs[PC] += offset5 * 2 ;
     printInstruction(stringInstr);
 }
 
 // format 19 // not implemented yet
 function longBranchWithLink(instr){
-    var stringInstr = "BL";
     var offset = instr & 0x7ff;
     if ((instr >> 11 & 1) == 0) {
         regs[LR] = regs[PC] + offset * 4096;
@@ -417,6 +426,7 @@ function longBranchWithLink(instr){
         regs[PC] = regs[LR] + offset * 2;
         regs[LR] = tmp | 1;
     }
+    var stringInstr = "BL " + offset; // supposed to be label
 }
 //format 16
 function conditionalBranch(instr){
@@ -504,7 +514,7 @@ function pushPopRegisters(instr){
         for(var i = 0; i < 8;i++){
             if(instr>>i & 1 == 1){
                 regs[STACK_POINTER] -= 4;
-                mem[regs[STACK_POINTER]] = regs[i]>>8 & 255;
+                mem[regs[STACK_POINTER]] = regs[i] & 255;//chk
                 mem[regs[STACK_POINTER]+1] = regs[i]>>8 & 255;
                 mem[regs[STACK_POINTER]+2] = regs[i]>>16 & 255;
                 mem[regs[STACK_POINTER]+3] = regs[i]>>24 & 255;
@@ -513,11 +523,11 @@ function pushPopRegisters(instr){
         }
         if(instr>>8 & 1 == 1){ // save lr reg
             regs[STACK_POINTER] -= 4;
-            mem[regs[STACK_POINTER]] = regs[LR]>>8 & 255;
+            mem[regs[STACK_POINTER]] = regs[LR] & 255;//chk
             mem[regs[STACK_POINTER]+1] = regs[LR]>>8 & 255;
             mem[regs[STACK_POINTER]+2] = regs[LR]>>16 & 255;
             mem[regs[STACK_POINTER]+3] = regs[LR]>>24 & 255;
-            instrString += 'R'+LR;
+            instrString += 'R'+','+LR;
         }
     }else{ // pop regs
         instrString = 'POP{ ';
@@ -531,13 +541,13 @@ function pushPopRegisters(instr){
                 instrString += 'R'+i+',';
             }
         }
-        if(instr>>8 & 1 == 1){
+        if(instr>>8 & 1 == 1){ 
                 regs[PC]  = mem[regs[STACK_POINTER]];
                 regs[PC] |= mem[regs[STACK_POINTER]+1]<<8;
                 regs[PC] |= mem[regs[STACK_POINTER]+2]<<16;
                 regs[PC] |= mem[regs[STACK_POINTER]+3]<<24;
                 regs[STACK_POINTER] += 4;
-                instrString += 'R'+PC;
+                instrString += 'R'+','+PC;
          }
     }
     if(instrString.length == instrString.lastIndexOf(','))
@@ -625,3 +635,10 @@ function isAddOverflowing(x,y){
     var result = Number(x)+Number(y);
     return Number(result != (x+y));
 }
+
+//check notes for immediates ie 
+/*#Imm is a full 7-bit address, but must
+be word-aligned (ie with bits 1:0 set to 0), since the assembler places #Imm >> 2 in
+the Offset5 field.
+*/
+// dk if important
