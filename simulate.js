@@ -61,12 +61,12 @@ function simulate(instr) {
 
         case 0b101: // format 12 & 13 &  14
             //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
-			if((instr >> 8 & 010110000) == 010110000) addOffsetStackPointer(instr); // format
+			if((instr >> 8 & 0b010110000) == 0b010110000) addOffsetStackPointer(instr); // format
             else {
                 if (instr >> 12 & 1 == 1) {
                     pushPopRegisters(instr); // format 14
             }   else {
-                    loadAdress(instr);
+                    loadAddress(instr);
                     }
                 }
             break;
@@ -257,7 +257,7 @@ function alu(instr){
         case 6:
             regs[destinationReg] -= regs[sourceReg];
             regs[destinationReg] -= (~carryFlag)&1; // and with one since carry flag should be 1 bit amd carryhere is i
-            stringInstr = 'SBC R'++destinationReg+',R'+sourceReg;
+            stringInstr = 'SBC R' + destinationReg+',R'+sourceReg;
             break;
         case 7:// rotate right
             var tmp = regs[destinationReg]>>regs[sourceReg];
@@ -395,10 +395,7 @@ function unconditionalBranch(instr){
 }
 // format 19 // not implemented yet
 function longBranchWithLink(instr){
-    var offset = (instr&0x3ff);
-        
-    if(instr>>11 & 1 == 1)
-    else offset = (instr&0x3ff);
+    
 }
 //format 16
 function conditionalBranch(instr){
@@ -407,7 +404,7 @@ function conditionalBranch(instr){
     var cond = instr>>8 & 0xf;
     var offset = instr & 0xff;
     switch(cond){
-        case 0;
+        case 0:
             if(zeroFlag == 1)  regs[PC] += (offset)*4;
             instrString = 'BEQ';
             break;
