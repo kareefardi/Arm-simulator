@@ -49,7 +49,7 @@ function simulate(instr) {
             break;
 
         case 0b010: // format 4 & 6 & 7
-			if (instr >> 10 == 0x1f) 
+			if (instr >> 10 == 0x10) 
                 alu(instr); // alu operations format 4
 			else if (instr >> 11 & (0b01001) == (0b01001))
                 pcRelativeLoad(instr); // format 6
