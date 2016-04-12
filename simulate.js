@@ -111,21 +111,21 @@ function addSubtract(instr){
     var stringInstr;
 
     if(opCode == 0){ // add
-        stringInstr = "ADD R" + destinationReg + ", R" + sourceReg + ", R" + sourceReg;
+        stringInstr = "ADD R" + destinationReg + ", R" + sourceReg;
         if(immediateFlag == 1){
             stringInstr += ", #" + offsetNReg;
             regs[destinationReg] =  regs[sourceReg] + offsetNReg;
          }else{
-            stringInstr += ", R" + regs[offsetNReg];
+            stringInstr += ", R" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] + regs[offsetNReg];
         }
     }else{ // subtract
-        stringInstr = "SUB R" + destinationReg + ", R" + sourceReg + ", R" + sourceReg;
+        stringInstr = "SUB R" + destinationReg + ", R" + sourceReg;
          if(immediateFlag == 1){
             stringInstr += ", #" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] - offsetNReg;
         }else{
-            stringInstr += ", R" + regs[offsetNReg];
+            stringInstr += ", R" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] - regs[offsetNReg];
         }
     }
@@ -175,7 +175,7 @@ function arithmeticImediate(instr){
     switch(opCode){
         case 0:
             regs[destinationReg] = offset8;
-            stringInstr = concatArgs('MOVS ','R',
+            stringInstr = concatArgs('MOV ','R',
                                      destinationReg,',#',offset8);
             
             zeroFlag = Number(offset8 == 0);
@@ -212,12 +212,10 @@ function arithmeticImediate(instr){
         case 3:
             regs[destinationReg] = regs[destinationReg] - offset8;
             stringInstr = concatArgs('SUB ','R',
-                    destinationReg,',R',destinationReg,',#',offset);
+                    destinationReg,',R',destinationReg,',#',offset8);
             
             overflowFlag = isAddOverflowing(regs[destinationReg],-offset8);
             carryFlag = 0;
-            stringInstr = concatArgs('CMP ','R',
-                                     destinationReg,',#',offset);
             break;
     }
     printInstruction(stringInstr);
@@ -556,11 +554,11 @@ function pushPopRegisters(instr){
 }
 // disables step and start buttons
 function terminateProgram(status){
-
+    console.log('program terminated');
 }
-// format 17
+// format 17 not implemented yet
 function softwareInterrupt(instr){
-
+    printInstruction('swi');
 }
 /*
 // format 10 not required
