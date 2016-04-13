@@ -1,3 +1,6 @@
+var memASM = new Uint8Array(2048);
+var regsASM = new Int32Array(16);
+
 function assemble(instr)
 {
 	var code = instr.substr(0, 3);
@@ -161,7 +164,47 @@ function foo(sign, len, str)
 			res.push('0');
 	}
 	else {
-		res = str.substring(str.length - len - 1, str.length - 1);
+		res = str.substring(str.length - len, str.length);
 	}
 	return res;
 }
+
+function asmAND(instr)
+{
+	var code = new Int32Array(1);
+	code[0] = (code | 0x1ff) << 6;
+	var val = instr.match([0-9]+/g);
+	var rd = Number(val[0]);
+	var rm = Number(val[1]);
+	code[0] |= rd;
+	code[0] = code[0] | (rm << 3);
+	//pass code[0] here
+}
+
+function asmASR(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match([0-9]+/g);
+	if (val.length == 3) {
+		//ASR(1)
+		code[0] = (code | 0x2) << 11;
+		var rd = Number(val[2]);
+		var rm = Number(val[1]);
+		var imm = val[0];
+		code[0] = code[0] | rd;
+		code[0] = code[0] | (rm >> 3);
+		code[0] = code[0] | (imm >> 6);
+	}
+	else {
+		//ASR(2)
+		code[0] = (code | 0b104) << 6;
+		var rd  =Number(val[1]);
+		var rs = Number(val[0]);
+		code[0] = code[0] | rd;
+		code[0] = code[0] | (rs >> 3);
+		code[0] = code[0] | (imm >> 6);
+	}
+
+
+
+
