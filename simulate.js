@@ -68,14 +68,16 @@ function simulate(instr) {
 
         case 0b101: // format 12 & 13 &  14
             //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
-			if((instr >> 8 & 0b10110000) == 0b10110000) addOffsetStackPointer(instr); // format
+			if((instr >> 8 & 0xb0) == 0xb0) addOffsetStackPointer(instr); // format
             else {
-                if (instr >> 12 & 1 == 1) {
+                pushPopRegisters(instr);
+                /*
+                if ((instr >> 12 & 1) == 1) {
                     pushPopRegisters(instr); // format 14
-            }   else {
+                }else {
                     loadAddress(instr);
-                    }
-                }
+                } */
+            }
             break;
 
         case 0b110: // format 15 & 16 & 17
@@ -89,8 +91,8 @@ function simulate(instr) {
             break;
 
         case 0b111: // format 18 & 19
-			if( ((instr >> 11)&(0b00)) == 0)	unconditionalBranch(instr); // format 18
-			else longBranchWithLink(instr);//format 19
+			if(instr>>12 == 0xf) longBranchWithLink(instr);//format 19
+			else unconditionalBranch(instr); // format 18
             break;
 		case 0xdead: // terminate program
 			terminateProgram(0); // zero for exit_success
@@ -447,7 +449,7 @@ function unconditionalBranch(instr){
     printInstruction(stringInstr);
 }
 
-// format 19 // not implemented yet
+// format 19
 function longBranchWithLink(instr){
     var offset = instr & 0x7ff;
     if ((instr >> 11 & 1) == 0) {
@@ -459,6 +461,7 @@ function longBranchWithLink(instr){
         regs[LR] = tmp | 1;
     }
     var stringInstr = "BL " + offset; // supposed to be label
+    printRegisterContent(stringInstr);
 }
 //format 16
 function conditionalBranch(instr){
