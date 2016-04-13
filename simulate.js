@@ -100,7 +100,7 @@ function simulate(instr) {
     }
 }
 
-//format 2
+//format 2 completed condition codes
 function addSubtract(instr){
     "use strict";
     var offsetNReg = instr>>6 & 0b111; // register id or immediate value depending
@@ -115,25 +115,41 @@ function addSubtract(instr){
         if(immediateFlag == 1){
             stringInstr += ", #" + offsetNReg;
             regs[destinationReg] =  regs[sourceReg] + offsetNReg;
+
+            overflowFlag = isAddOverflowing(regs[sourceReg],offsetNReg,regs[destinationReg]);
+            carryFlag = isAddGenCarry(regs[sourceReg],offsetNReg);
+
          }else{
             stringInstr += ", R" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] + regs[offsetNReg];
+
+            overflowFlag = isAddOverflowing(regs[sourceReg],regs[offsetNReg],regs[destinationReg]);
+            carryFlag = isAddGenCarry(regs[sourceReg],regs[offsetNReg]);
         }
     }else{ // subtract
         stringInstr = "SUB R" + destinationReg + ", R" + sourceReg;
          if(immediateFlag == 1){
             stringInstr += ", #" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] - offsetNReg;
+
+            // adding negative since this is equivalent to addition with negative of second operant
+            overflowFlag = isAddOverflowing(regs[sourceReg],-offsetNReg,regs[destinationReg]);
+            carryFlag = isAddGenCarry(regs[sourceReg],-offsetNReg);
         }else{
             stringInstr += ", R" + offsetNReg;
             regs[destinationReg] = regs[sourceReg] - regs[offsetNReg];
+
+            overflowFlag = isAddOverflowing(regs[sourceReg],-regs[offsetNReg],regs[destinationReg]);
+            carryFlag = isAddGenCarry(regs[sourceReg],-regs[offsetNReg]);
         }
     }
+    zeroFlag = Number(regs[destinationReg] == 0);
+    negativeFlag = Number(regs[destinationReg] < 0);
     printInstruction(stringInstr);
 }
 
 
-// format 1
+// format 1 condition flags done
 function moveShiftedRegister(instr){
     "use strict";
     var offset = instr>>6 & 0b11111; // extract offset
@@ -223,7 +239,7 @@ function arithmeticImediate(instr){
     }
     printInstruction(stringInstr);
 }
-//format 4
+//format 4 complete
 function alu(instr){
     "use strict";
     var destinationReg = instr & 0b111;
