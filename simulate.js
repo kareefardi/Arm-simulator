@@ -212,7 +212,7 @@ function alu(instr){
     console.log('alu called');
     
     switch(opcode){
-        case 0: // overflow detection not implemented
+        case 0: // flags done at endof switch
             regs[destinationReg] = regs[destinationReg] & regs[sourceReg];
             stringInstr = 'AND R'+destinationReg+',R'+sourceReg;
             
@@ -266,16 +266,21 @@ function alu(instr){
             var carry = Number(tmp)-Number(regs[sourceReg])-carryFlag;
             carryFlag = carry>>32; //extract
             break;
-        case 7:// rotate right
-            var tmp = regs[destinationReg]>>regs[sourceReg];
-            regs[destinationReg] = regs[destinationReg]<<(32-regs[sourceReg]);
+        case 7:// rotate right //not sure of c flag status
+            var tmp = regs[destinationReg]<<(32-regs[sourceReg]);
+            regs[destinationReg] = regs[destinationReg]>>regs[sourceReg];
             regs[destinationReg] |= tmp;
             stringInstr = 'ROR R'+destinationReg+',R'+sourceReg;
+            
             break;
-        case 8:// TST
+        case 8:// TST print inside since it doesnt have result in destination reg
             var result = regs[destinationReg] & regs[sourceReg];
             stringInstr = 'TST R' + destinationReg + ', R' + sourceReg;
             
+            zeroFlag = Number(result == 0);
+            negativeFlag = Number(result < 0);
+            printInstruction(stringInstr);
+            return;
             break;
         case 9:
             regs[destinationReg] = -regs[sourceReg];
@@ -283,16 +288,26 @@ function alu(instr){
             break;
         case 10://CMP
             var result = regs[destinationReg] - regs[sourceReg];
+            
+            zeroFlag = Number(result == 0);
+            negativeFlag = Number(result < 0);
+            printInstruction(stringInstr);
+            return;
             break;
         case 11:
             var result = regs[destinationReg] - regs[sourceReg];
+            
             zeroFlag = Number(result == 0);
+            negativeFlag = Number(result < 0);
+            printInstruction(stringInstr);
+            return;
+            
             break;
         case 12:
             regs[destinationReg] |= regs[sourceReg];
             stringInstr = 'ORR R'+destinationReg+',R'+sourceReg;
             break;
-        case 13:
+        case 13:// stopped here
             regs[destinationReg] *= regs[sourceReg];
             stringInstr = 'MUL R'+destinationReg+',R'+sourceReg;
             break;
