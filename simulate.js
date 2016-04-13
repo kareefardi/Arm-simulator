@@ -307,7 +307,7 @@ function alu(instr){
             regs[destinationReg] |= regs[sourceReg];
             stringInstr = 'ORR R'+destinationReg+',R'+sourceReg;
             break;
-        case 13:// stopped here
+        case 13:// c and v unchanged since he wants corruption
             regs[destinationReg] *= regs[sourceReg];
             stringInstr = 'MUL R'+destinationReg+',R'+sourceReg;
             break;
@@ -315,7 +315,7 @@ function alu(instr){
             regs[destinationReg] = regs[destinationReg] & (~regs[sourceReg]);
             stringInstr = 'BIC R'+destinationReg+',R'+sourceReg;
             break;
-        default: // opcode 1111
+        default: // opcode 1111 // left because unknown
             regs[destinationReg] = ~regs[sourceReg];
             stringInstr = 'MVN R'+destinationReg+',R'+sourceReg;
             break;
