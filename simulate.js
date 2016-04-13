@@ -49,7 +49,7 @@ function simulate(instr) {
             break;
 
         case 0b010: // format 4 & 6 & 7
-			if (instr >> 10 == 0x10) 
+			if (instr >> 10 == 0x10)
                 alu(instr); // alu operations format 4
 			else if (instr >> 11 & (0b01001) == (0b01001))
                 pcRelativeLoad(instr); // format 6
@@ -143,18 +143,23 @@ function moveShiftedRegister(instr){
     var stringInstr; // string representation of instruction
     switch(opcode){
         case 0:
+            if(regs[sourceReg] != 0)
+                carryFlag = regs[sourceReg] & 1<<(32-offset);
             regs[destinationReg] = regs[sourceReg]<<offset; // left arthmetic shift
             stringInstr = concatArgs('LSL ','R',destinationReg
                                      ,',','R',sourceReg,',','#',offset);
             break;
         case 1:
-            regs[destinationReg] = regs[sourceReg]>>>offset; // right logical shift
-
+            if(regs[sourceReg] != 0)
+                carryFlag = regs[sourceReg]>>(regs[sourceReg]-1) & 1;
+            regs[destinationReg] = regs[sourceReg]>>offset; // right logical shift
             stringInstr = concatArgs('LSR ','R',destinationReg
                                      ,',','R',sourceReg,',','#',offset);
             break;
         case 2:
-            regs[destinationReg] = regs[sourceReg]>>offset; // right arithmetic shift
+            if(regs[sourceReg] != 0)
+                carryFlag = regs[destinationReg]>>>(regs[sourceReg]-1) & 1;
+            regs[destinationReg] = regs[sourceReg]>>>offset; // right arithmetic shift
             stringInstr = concatArgs('ASR ','R',destinationReg
                                      ,',','R',sourceReg,',','#',offset);
             break;
@@ -163,6 +168,8 @@ function moveShiftedRegister(instr){
             stringInstr = 'unknown instruction';
             break;
     }
+    zeroFlag = Number(regs[destinationReg] == 0);
+    negativeFlag = Number(regs[destinationReg] < 0);
     printInstruction(stringInstr);
 }
 // format 3,  condition codes not written
@@ -179,14 +186,9 @@ function arithmeticImediate(instr){
                                      destinationReg,',#',offset8);
             break;
         case 1:
-            if(regs[destinationReg] == offset8)
-                zeroFlag = 1;
-            else
-                zeroFlag = 0;
-            if(regs[destinationReg]-offset8 < 0)
-                negativeFlag = 1;
-            else
-                negativeFlag = 0;
+            var tmp = regs[destinationReg] - offset8;
+            zeroFlag = Number(tmp == 0);
+            negativeFlag = Number(tmp < 0);
             break;
         case 2:
             regs[destinationReg] = regs[destinationReg] + offset8;
@@ -208,14 +210,14 @@ function alu(instr){
     var sourceReg = instr>>3 & 0b111;
     var opcode = instr>>6 & 0xf;
     var stringInstr;
-    
+
     console.log('alu called');
-    
+
     switch(opcode){
         case 0: // flags done at endof switch
             regs[destinationReg] = regs[destinationReg] & regs[sourceReg];
             stringInstr = 'AND R'+destinationReg+',R'+sourceReg;
-            
+
             break;
         case 1:// flags done
             regs[destinationReg] ^= regs[sourceReg];
@@ -228,28 +230,28 @@ function alu(instr){
                 carryFlag = regs[destinationReg] & 1<<(32-regs[sourceReg]);
             regs[destinationReg] = regs[destinationReg]<<regs[sourceReg];
             stringInstr = 'LSL R'+destinationReg+',R'+sourceReg;
-            
+
             break;
         case 3:// done flags
-            f(regs[sourceReg] != 0)
+            if(regs[sourceReg] != 0)
                 carryFlag = regs[destinationReg]>>(regs[sourceReg]-1) & 1;
             regs[destinationReg] = regs[destinationReg]>>regs[sourceReg];
             stringInstr = 'LSR R'+destinationReg+',R'+sourceReg;
-            
+
             break;
         case 4:// done
-            f(regs[sourceReg] != 0)
-                carryFlag = regs[destinationReg]>>(regs[sourceReg]-1) & 1;
+            if(regs[sourceReg] != 0)
+                carryFlag = regs[destinationReg]>>>(regs[sourceReg]-1) & 1;
             regs[destinationReg] = regs[destinationReg]>>>regs[sourceReg];
             stringInstr = 'ASR R'+destinationReg+',R'+sourceReg;
-     
+
            break;
         case 5:
             var tmp = regs[destinationReg];
             regs[destinationReg] += regs[sourceReg];
             regs[destinationReg] += carryFlag;
             stringInstr = 'ADC R'+destinationReg+',R'+sourceReg;
-            
+
             overflowFlag  = isAddOverflowing(tmp,reg[sourceReg]);
             overflowFlag |= isAddOverflowing(tmp+regs[sourceReg],carryFlag);
             var carry = Number(tmp)+Number(regs[sourceReg])+carryFlag;
@@ -260,7 +262,7 @@ function alu(instr){
             regs[destinationReg] -= regs[sourceReg];
             regs[destinationReg] -= (carryFlag); // and with one since carry flag should be 1 bit amd carryhere is i
             stringInstr = 'SBC R' + destinationReg+',R'+sourceReg;
-            
+
             overflowFlag  = isAddOverflowing(tmp,-reg[sourceReg]);
             overflowFlag |= isAddOverflowing(tmp-regs[sourceReg],-carryFlag);
             var carry = Number(tmp)-Number(regs[sourceReg])-carryFlag;
@@ -271,12 +273,12 @@ function alu(instr){
             regs[destinationReg] = regs[destinationReg]>>regs[sourceReg];
             regs[destinationReg] |= tmp;
             stringInstr = 'ROR R'+destinationReg+',R'+sourceReg;
-            
+
             break;
         case 8:// TST print inside since it doesnt have result in destination reg
             var result = regs[destinationReg] & regs[sourceReg];
             stringInstr = 'TST R' + destinationReg + ', R' + sourceReg;
-            
+
             zeroFlag = Number(result == 0);
             negativeFlag = Number(result < 0);
             printInstruction(stringInstr);
@@ -288,7 +290,7 @@ function alu(instr){
             break;
         case 10://CMP
             var result = regs[destinationReg] - regs[sourceReg];
-            
+
             zeroFlag = Number(result == 0);
             negativeFlag = Number(result < 0);
             printInstruction(stringInstr);
@@ -296,12 +298,12 @@ function alu(instr){
             break;
         case 11:
             var result = regs[destinationReg] - regs[sourceReg];
-            
+
             zeroFlag = Number(result == 0);
             negativeFlag = Number(result < 0);
             printInstruction(stringInstr);
             return;
-            
+
             break;
         case 12:
             regs[destinationReg] |= regs[sourceReg];
@@ -328,7 +330,7 @@ function alu(instr){
 function pcRelativeLoad(instr){
     'use strict';
     var rd = instr>>8 & 0b111;
-    var word8 = instr>>8 & 255; // check doc notes 
+    var word8 = instr>>8 & 255; // check doc notes
     regs[rd] = mem[word8+regs[15]];
     printInstruction('LDR R'+rd+'[PC,#'+word8+']');
 }
@@ -535,7 +537,7 @@ function pushPopRegisters(instr){
                 instrString += 'R'+i+',';
             }
         }
-        if(instr>>8 & 1 == 1){ 
+        if(instr>>8 & 1 == 1){
                 regs[PC]  = mem[regs[STACK_POINTER]];
                 regs[PC] |= mem[regs[STACK_POINTER]+1]<<8;
                 regs[PC] |= mem[regs[STACK_POINTER]+2]<<16;
@@ -636,7 +638,7 @@ function isAddOverflowing(x,y,z){
     return overflow;
 }
 
-//check notes for immediates ie 
+//check notes for immediates ie
 /*#Imm is a full 7-bit address, but must
 be word-aligned (ie with bits 1:0 set to 0), since the assembler places #Imm >> 2 in
 the Offset5 field.
