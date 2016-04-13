@@ -172,7 +172,7 @@ function moveShiftedRegister(instr){
     negativeFlag = Number(regs[destinationReg] < 0);
     printInstruction(stringInstr);
 }
-// format 3,  condition codes not written
+// format 3,  condition codes done
 function arithmeticImediate(instr){
     "use strict";
     var offset8 = instr&0xff;
@@ -184,21 +184,41 @@ function arithmeticImediate(instr){
             regs[destinationReg] = offset8;
             stringInstr = concatArgs('MOV ','R',
                                      destinationReg,',#',offset8);
+            zeroFlag = Number(regs[destinationReg] == 0);
+            negativeFlag = Number(regs[destinationReg] < 0);
             break;
         case 1:
             var tmp = regs[destinationReg] - offset8;
+
             zeroFlag = Number(tmp == 0);
             negativeFlag = Number(tmp < 0);
+            overflowFlag = isAddOverflowing(regs[destination],-offset8,tmp);
+            carryFlag = isAddGenCarry(regs[destination],-offset8);
             break;
         case 2:
+            overflowFlag = isAddOverflowing(regs[destination],
+                offset8,regs[destination]+offset8);
+            carryFlag = isAddGenCarry(regs[destination],offset8);
+
             regs[destinationReg] = regs[destinationReg] + offset8;
             stringInstr = concatArgs('ADD ','R',
                     destinationReg,',R',destinationReg,',#',offset);
+
+            zeroFlag = Number(regs[destination] == 0);
+            negativeFlag = Number(regs[destination] < 0);
+
             break;
         case 3:
+            overflowFlag = isAddOverflowing(regs[destination],
+                offset8,regs[destination]+offset8);
+            carryFlag = isAddGenCarry(regs[destination],offset8);
+
             regs[destinationReg] = regs[destinationReg] - offset8;
             stringInstr = concatArgs('SUB ','R',
                     destinationReg,',R',destinationReg,',#',offset8);
+
+            zeroFlag = Number(regs[destination] == 0);
+            negativeFlag = Number(regs[destination] < 0);
             break;
     }
     printInstruction(stringInstr);
@@ -636,6 +656,14 @@ function isAddOverflowing(x,y,z){
     else
         overflow = 0;
     return overflow;
+}
+
+function isAddGenCarry(x,y){
+    if((x >= 0 && y < 0) || (x < 0 && y >= 0))
+        return 0; // no carry if opposite signs
+    if(x < 0&& y < 0)
+        return Number((Number(x) + Number(y))>>32 & 1 == 0); // carry for negative if bit zero
+    return (Number(x) + Number(y))>>32 & 1;
 }
 
 //check notes for immediates ie
