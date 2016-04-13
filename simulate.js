@@ -177,11 +177,6 @@ function arithmeticImediate(instr){
             regs[destinationReg] = offset8;
             stringInstr = concatArgs('MOV ','R',
                                      destinationReg,',#',offset8);
-            
-            zeroFlag = Number(offset8 == 0);
-            offset8 < 0 ? negativeFlag = 1 : negativeFlag = 0;
-            carryFlag = overflowFlag = 0;
-            
             break;
         case 1:
             if(regs[destinationReg] == offset8)
@@ -192,30 +187,16 @@ function arithmeticImediate(instr){
                 negativeFlag = 1;
             else
                 negativeFlag = 0;
-            overflowFlag = isAddOverflowing(regs[destinationReg],-offset8);
-            carryFlag = 0;
-            stringInstr = concatArgs('CMP ','R',
-                                     destinationReg,',#',offset);
             break;
         case 2:
             regs[destinationReg] = regs[destinationReg] + offset8;
             stringInstr = concatArgs('ADD ','R',
                     destinationReg,',R',destinationReg,',#',offset);
-            
-            overflowFlag = isAddOverflowing(regs[destinationReg],offset8);
-            regs[destinationReg] < 0 ? overflowFlag = 1 : overflowFlag = 0;
-            zeroFlag = Number(regs[destinationReg] == 0);
-            carryFlag  = 0;
-            
-            
             break;
         case 3:
             regs[destinationReg] = regs[destinationReg] - offset8;
             stringInstr = concatArgs('SUB ','R',
                     destinationReg,',R',destinationReg,',#',offset8);
-            
-            overflowFlag = isAddOverflowing(regs[destinationReg],-offset8);
-            carryFlag = 0;
             break;
     }
     printInstruction(stringInstr);
@@ -235,44 +216,55 @@ function alu(instr){
             regs[destinationReg] = regs[destinationReg] & regs[sourceReg];
             stringInstr = 'AND R'+destinationReg+',R'+sourceReg;
             
-            overflowFlag = carryFlag = 0;
-            negativeFlag = Number(regs[destinationReg] < 0);
-            zeroFlag = Number(regs[destinationReg] == 0);
             break;
-        case 1:
+        case 1:// flags done
             regs[destinationReg] ^= regs[sourceReg];
             stringInstr = 'EOR R'+destinationReg+',R'+sourceReg;
-            
-            overflowFlag = carryFlag = 0;
-            negativeFlag = Number(regs[destinationReg] < 0);
-            zeroFlag = Number(regs[destinationReg] == 0);
+
             break;
-        case 2:
+        case 2://flags done
+            //check carry out
+            if(regs[sourceReg] != 0)
+                carryFlag = regs[destinationReg] & 1<<(32-regs[sourceReg]);
             regs[destinationReg] = regs[destinationReg]<<regs[sourceReg];
             stringInstr = 'LSL R'+destinationReg+',R'+sourceReg;
             
             break;
-        case 3:
+        case 3:// done flags
+            f(regs[sourceReg] != 0)
+                carryFlag = regs[destinationReg]>>(regs[sourceReg]-1) & 1;
             regs[destinationReg] = regs[destinationReg]>>regs[sourceReg];
             stringInstr = 'LSR R'+destinationReg+',R'+sourceReg;
             
-            overflowFlag = carryFlag = 0;
-            negativeFlag = Number(regs[destinationReg] < 0);
-            zeroFlag = Number(regs[destinationReg] == 0);
-            
             break;
-        case 4:
+        case 4:// done
+            f(regs[sourceReg] != 0)
+                carryFlag = regs[destinationReg]>>(regs[sourceReg]-1) & 1;
             regs[destinationReg] = regs[destinationReg]>>>regs[sourceReg];
             stringInstr = 'ASR R'+destinationReg+',R'+sourceReg;
+     
            break;
         case 5:
-            regs[destinationReg] += regs[destinationReg]+carryFlag;
+            var tmp = regs[destinationReg];
+            regs[destinationReg] += regs[sourceReg];
+            regs[destinationReg] += carryFlag;
             stringInstr = 'ADC R'+destinationReg+',R'+sourceReg;
+            
+            overflowFlag  = isAddOverflowing(tmp,reg[sourceReg]);
+            overflowFlag |= isAddOverflowing(tmp+regs[sourceReg],carryFlag);
+            var carry = Number(tmp)+Number(regs[sourceReg])+carryFlag;
+            carryFlag = carry>>32; //extract
             break;
         case 6:
+            var tmp = regs[destinationReg];
             regs[destinationReg] -= regs[sourceReg];
-            regs[destinationReg] -= (~carryFlag)&1; // and with one since carry flag should be 1 bit amd carryhere is i
+            regs[destinationReg] -= (carryFlag); // and with one since carry flag should be 1 bit amd carryhere is i
             stringInstr = 'SBC R' + destinationReg+',R'+sourceReg;
+            
+            overflowFlag  = isAddOverflowing(tmp,-reg[sourceReg]);
+            overflowFlag |= isAddOverflowing(tmp-regs[sourceReg],-carryFlag);
+            var carry = Number(tmp)-Number(regs[sourceReg])-carryFlag;
+            carryFlag = carry>>32; //extract
             break;
         case 7:// rotate right
             var tmp = regs[destinationReg]>>regs[sourceReg];
@@ -282,10 +274,8 @@ function alu(instr){
             break;
         case 8:// TST
             var result = regs[destinationReg] & regs[sourceReg];
-            zeroFlag = result == 1 ? 1 : 0; // shouldnt zero flag = 1 when result = 0?
-            negativeFlag = result < 0 ? 1 : 0;
             stringInstr = 'TST R' + destinationReg + ', R' + sourceReg;
-            overflowFlag = carryFlag = 0;
+            
             break;
         case 9:
             regs[destinationReg] = -regs[sourceReg];
@@ -293,21 +283,10 @@ function alu(instr){
             break;
         case 10://CMP
             var result = regs[destinationReg] - regs[sourceReg];
-            zeroFlag = Number(result == 0);
-            
-            negativeFlag = result < 0 ? 1 : 0;
-            carryFlag = 0;
-            overflowFlag = isAddOverflowing(regs[destinationReg],-regs[sourceReg]);
-            stringInstr = 'CMP R' + destinationReg + ', R' + sourceReg;
             break;
         case 11:
             var result = regs[destinationReg] - regs[sourceReg];
             zeroFlag = Number(result == 0);
-            
-            negativeFlag = result < 0 ? 1 : 0;
-            carryFlag = 0;
-            overflowFlag = isAddOverflowing(regs[destinationReg],-regs[sourceReg]);
-            stringInstr = 'CMN R' + destinationReg + ', R' + sourceReg;
             break;
         case 12:
             regs[destinationReg] |= regs[sourceReg];
@@ -325,7 +304,9 @@ function alu(instr){
             regs[destinationReg] = ~regs[sourceReg];
             stringInstr = 'MVN R'+destinationReg+',R'+sourceReg;
             break;
-    }
+    }//common case for all
+    zeroFlag = Number(regs[destinationReg] == 0);
+    negativeFlag = Number(regs[destinationReg] < 0);
     printInstruction(stringInstr);
 }
 // format 6
@@ -629,9 +610,15 @@ function loadAddress(instr) {
     printInstruction(stringInsr);
 } */
 // determines if answer will overflow
-function isAddOverflowing(x,y){
-    var result = Number(x)+Number(y);
-    return Number(result != (x+y));
+function isAddOverflowing(x,y,z){
+    var overflow;
+    if(x < 0 && y < 0 && z >= 0)
+        overflow = 1;
+    else if(x > 0 && y > 0 && z < 0)
+        overflow = 1;
+    else
+        overflow = 0;
+    return overflow;
 }
 
 //check notes for immediates ie 
