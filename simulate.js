@@ -22,12 +22,13 @@ function step(){
     var instrLoc = regs[15]-4;
     if(instrLoc < mem.length){
         var instr = mem[instrLoc] | mem[instrLoc+1]<<8
-        simulate(instr);// load upper and lower part of half word instruction
         regs[15] += 2; // increment by one
+        simulate(instr);// load upper and lower part of half word instruction
         console.log('instr '+instr);
         printRegisterContent(regs);
     }else{ // disable buttons of step and start since execution finished
         console.log('program execution done');
+        console.log(mem.length + " and pc " + regs[PC]);
     }
 }
 // returns binary format of decimal numbers
@@ -91,8 +92,10 @@ function simulate(instr) {
             break;
 
         case 0b111: // format 18 & 19
-			if(instr>>12 == 0xf) longBranchWithLink(instr);//format 19
+            if(instr>>12 == 0xf)
+                longBranchWithLink(instr);// format 19
 			else unconditionalBranch(instr); // format 18
+
             break;
 		case 0xdead: // terminate program
 			terminateProgram(0); // zero for exit_success
@@ -453,15 +456,15 @@ function unconditionalBranch(instr){
 function longBranchWithLink(instr){
     var offset = instr & 0x7ff;
     if ((instr >> 11 & 1) == 0) {
-        regs[LR] = regs[PC] + offset * 4096;
+        regs[LR] = regs[PC] + offset<<12;
     }
     else {
-        var tmp = regs[PC] - 1;
-        regs[PC] = regs[LR] + offset * 2;
+        var tmp = regs[PC] ;//- 1;
+        regs[PC] = regs[LR] + offset<<1;
         regs[LR] = tmp | 1;
     }
     var stringInstr = "BL " + offset; // supposed to be label
-    printRegisterContent(stringInstr);
+    printInstruction(stringInstr);
 }
 //format 16
 function conditionalBranch(instr){
