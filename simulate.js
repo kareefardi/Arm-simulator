@@ -42,23 +42,23 @@ function simulate(instr) {
     console.log('simulate case '+fmt);
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
-			(instr >> 11 & 0b11) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
-		  break;
+            (instr >> 11 & 0b11) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
+          break;
 
         case 0b001: // arithmetic operations with immediate value
-			arithmeticImediate(instr);
+            arithmeticImediate(instr);
             break;
 
         case 0b010: // format 4 & 6 & 7
-			if (instr >> 10 == 0x10)
+            if (instr >> 10 == 0x10)
                 alu(instr); // alu operations format 4
-			else if (instr >> 11 & (0b01001) == (0b01001))
+            else if (instr >> 11 & (0b01001) == (0b01001))
                 pcRelativeLoad(instr); // format 6
-			else if (instr >> 12 & (0b0101) == (0b0101))
+            else if (instr >> 12 & (0b0101) == (0b0101))
                 loadStoreRegisterOffset(instr); // format 7
             break;
         case 0b011: // format 9
-			loadStoreWithImmOffset(instr);
+            loadStoreWithImmOffset(instr);
             break;
 
         case 0b100: // format 10 & 11
@@ -69,7 +69,7 @@ function simulate(instr) {
 
         case 0b101: // format 12 & 13 &  14
             //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
-			if((instr >> 8 & 0xb0) == 0xb0) addOffsetStackPointer(instr); // format
+            if((instr >> 8 & 0xb0) == 0xb0) addOffsetStackPointer(instr); // format
             else {
                 pushPopRegisters(instr);
                 /*
@@ -82,8 +82,8 @@ function simulate(instr) {
             break;
 
         case 0b110: // format 15 & 16 & 17
-			if((instr>>8 & 0b11111) == 0b11111) softwareInterrupt(instr); // format 17
-			else {
+            if((instr>>8 & 0b11111) == 0b11111) softwareInterrupt(instr); // format 17
+            else {
                  if ((instr >> 12 & 1) == 1)
                     conditionalBranch(instr); // format 16
                  else
@@ -94,11 +94,11 @@ function simulate(instr) {
         case 0b111: // format 18 & 19
             if(instr>>12 == 0xf)
                 longBranchWithLink(instr);// format 19
-			else unconditionalBranch(instr); // format 18
+            else unconditionalBranch(instr); // format 18
 
             break;
-		case 0xdead: // terminate program
-			terminateProgram(0); // zero for exit_success
+        case 0xdead: // terminate program
+            terminateProgram(0); // zero for exit_success
             break;
         default:
             break;
@@ -446,22 +446,29 @@ function addOffsetStackPointer(instr){
 }
 //format 18
 function unconditionalBranch(instr){
-    var offset5 = instr & 0x7ff;
-    var stringInstr = "B " + (offset5 * 2); // supposed to be label
-    regs[PC] += offset5 * 2 ;
+    var offset11 = instr & 0x7ff;
+    //sign extend and mult by 2
+    offset11 = offset11 << 1;
+    offset11 = offset11 >>> 1;
+    offset11 = offset11 << 1;
+
+    var stringInstr = "B " + offset11;
+    regs[PC] += offset11 ;
     printInstruction(stringInstr);
 }
 
 // format 19
 function longBranchWithLink(instr){
     var offset = instr & 0x7ff;
+    offset = offset << 1;
+    offset = ofset >>> 1;
     if ((instr >> 11 & 1) == 0) {
         regs[LR] = regs[PC] + offset<<12;
     }
     else {
-        var tmp = regs[PC] ;//- 1;
+        var tmp = regs[PC] ;// address of next instruction = tmp ?
         regs[PC] = regs[LR] + offset<<1;
-        regs[LR] = tmp | 1;
+        regs[LR] = tmp | 1; 
     }
     var stringInstr = "BL " + offset; // supposed to be label
     printInstruction(stringInstr);
@@ -472,6 +479,12 @@ function conditionalBranch(instr){
     var instrString = '';
     var cond = instr>>8 & 0xf;
     var offset = instr & 0xff;
+    //sign extend
+    offset = offset << 1;
+    offset = offset >>> 1;
+    // mult * 2 or shift by one
+    offset = offset << 1;
+
     switch(cond){
         case 0:
             if(zeroFlag == 1)  regs[PC] += (offset)*4;
@@ -523,12 +536,12 @@ function conditionalBranch(instr){
             break;
         case 12:
             if(zeroFlag == 0 && (negativeFlag == overflowFlag))
-                regs[PC] += (offset)*4;
+                regs[PC] += (offset);
             instrString = 'BGT';
             break;
         case 13:
             if(zeroFlag == 1 || negativeFlag == overflowFlag)
-                regs[PC] += (offset)*4;
+                regs[PC] += (offset);
             instrString = 'BLE';
             break;
     }
