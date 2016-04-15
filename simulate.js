@@ -492,15 +492,9 @@ function longBranchWithLink(instr){
         regs[LR] = regs[PC] + (offset<<12);
     }
     else {
-<<<<<<< HEAD
-        var tmp = regs[PC] ;//- 1;
-        regs[PC] = regs[LR] + (offset<<1);
-        regs[LR] = tmp | 1;
-=======
         var tmp = regs[PC] ;// address of next instruction = tmp ?
         regs[PC] = regs[LR] + offset<<1;
-        regs[LR] = tmp | 1; 
->>>>>>> 4ac4b642d85f3d4d65c58ccd0afb7feae1577df7
+        regs[LR] = tmp | 1;
     }
     var stringInstr = "BL " + offset; // supposed to be label
     printInstruction(stringInstr);
