@@ -150,7 +150,7 @@ function asmADC(instr)
 {
 	var out = '010000101';
 	//var res = str.match(/ain/g);
-	var val = instr.match([0-9]+/g);
+	var val = instr.match(/[0-9]+/g);
 	var rd = Number(val[0]).ToString(2);
 	var rm = Number(val[1]).ToString(2);
 }
@@ -173,7 +173,7 @@ function asmAND(instr)
 {
 	var code = new Int32Array(1);
 	code[0] = (code | 0x1ff) << 6;
-	var val = instr.match([0-9]+/g);
+	var val = instr.match(/[0-9]+/g);
 	var rd = Number(val[0]);
 	var rm = Number(val[1]);
 	code[0] |= rd;
@@ -184,27 +184,324 @@ function asmAND(instr)
 function asmASR(instr)
 {
 	var code = new Int32Array(1);
-	var val = instr.match([0-9]+/g);
+	var val = instr.match(/[0-9]+/g);
 	if (val.length == 3) {
 		//ASR(1)
 		code[0] = (code | 0x2) << 11;
-		var rd = Number(val[2]);
-		var rm = Number(val[1]);
-		var imm = val[0];
-		code[0] = code[0] | rd;
-		code[0] = code[0] | (rm >> 3);
-		code[0] = code[0] | (imm >> 6);
+		var rd = val[0];
+		var rm = val[1];
+		var imm = val[2];
+		code[0] = code[0] | (rd >>> 0);
+		code[0] = code[0] | (rm << 3);
+		code[0] = code[0] | (imm << 6);
 	}
 	else {
 		//ASR(2)
-		code[0] = (code | 0b104) << 6;
-		var rd  =Number(val[1]);
-		var rs = Number(val[0]);
+		code[0] = (code | 0x104) << 6;
+		var rd  = val[0];
+		var rs = val[1];
 		code[0] = code[0] | rd;
-		code[0] = code[0] | (rs >> 3);
-		code[0] = code[0] | (imm >> 6);
+		code[0] = code[0] | (rs << 3);
 	}
+}
+
+function asmCMN(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	code[0] = (code | 0x10b) << 6;
+	var rn = val[0];
+	var rm = val[1];
+	code[0] = code | (rn >>> 0);
+	code[0] = code | (rm << 3);
+}
+
+function asmEOR(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x101) << 6;
+	code[0] = code | rm << 3;
+	code[0] = code | rd >>> 0;
+}
+
+function asmMUL(instr)
+{
+
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x10d) << 6;
+	code[0] = code | rm << 3;
+	code[0] = code | rd >>> 0;
+}
+
+function asmMVN(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x10e) << 6;
+	code[0] = code | (rm << 3);
+	code[0] = code | (rd >>> 0);
+}
+
+function asmNEG(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x109) << 6;
+	code[0] = code | (rm << 3);
+	code[0] = code | (rd >>> 0);
+}
+
+function asmORR(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x10c) << 6;
+	code[0] = code | (rm << 3);
+	code[0] = code | (rd >>> 0);
+}
+
+function asmROR(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rs = val[1];
+	code[0] = (code | 0x107) << 6;
+	code[0] = code | (rs << 3);
+	code[0] = code | rd >>> 0;
+}
+
+function asmSBC(instr)
+{
+	//need to handle negative
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x105) << 6;
+	code[0] = code | (rs << 3);
+	code[0] = code | (rd >>> 0);
+}
 
 
+function asmSWI(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var imm = val[0];
+	code[0] = (code | 0x6e) << 8;
+	code[0] = code | (imm >>> 0);
+}
+
+function asmTST(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rn = val[0];
+	var rm = val[1];
+	code[0] = (code | 0x108) << 6;
+	code[0] = code | (rm << 3);
+	code[0] = code | (rn >>> 0);
+}
+
+function asmADD(instr)
+{
+	var code = new Int32Array(0);
+	var val = instr.match(/[0-9]+/g);
+	var rNo = instr.match(/R/g);
+	switch (rNo.length) {
+		case 0:
+			//add7
+			code[0] = (code[0] | 0x160) << 7;
+			var imm = val[0];
+			code[0] = code[0] | (imm >>> 0);
+			break
+		case 1:
+			var pc = instr.match)(/PC/g);
+			var sp = instr.match)(/SP/g);
+			if (val[2] < 0) {
+				//sub here
+			}
+			else
+				{
+					if (pc.length <  1 && sp.length < 1) 
+				//add2
+				code[0] = (code[0] | 0x06) << 11;
+			else {
+					if (sp < 1)
+						//add5
+						code[0] = (code[0] | 0x14) << 11;
+					else
+						//add6
+						code[0] = (code[0] | 0x15) << 11;
+				}
+					var rd = val[0];
+					var imm = val[1];
+					code[0] = code[0] | (imm >>> 0);
+					code[0] = code[0] | (rd << 8);
+			}
+			break;
+		case 2:
+			if (val.length < 3) {
+				//add4
+				//need revision
+				var rd = val[0];
+				var rm = val[1];
+				code[0] = (code[0] | 0x084) << 8;
+				code[0] = code[0] | ((rd >>> 0) & 0x7);
+				code[0] = code[0] | (rn << 3) ;
+				code[0] = code[0] | (((rd >>> 0) & 0x8) << 7);
+			}
+			else {
+				//add1
+				var rd = val[0];
+				var rn = val[1];
+				var imm = val[2];
+				code[0] = (code[0] | 0x0d) << 9;
+				code[0] = code[0] | (rd >>> 0);
+				code[0] = code[0] | (rn << 3);
+				code[0] = code[0] | (imm << 6);
+			}
+			break;
+		case 3:
+			//add3
+			code[0] = (code[0] | 0x0c) << 9;
+			var rd = val[0];
+			var rn = val[1];
+			var rm = val[2];
+			code[0] = code[0] | (rd >>> 0);
+			code[0] = code[0] | (rn << 3);
+			code[0] = code[0] | (rn << 6);
+			break;
+	}
+	//pass code[0] here
+}
+
+function asmcnB(instr) 
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var simm = val[0];
+	var cond;
+	//substring cond here
+	switch (cond) {
+		//encode conditions here
+	}
+	code[0] = (code[0] | 0x0d) << 12;
+	code[0] = code[0] | ((simm >>> 0) & 0xff);
+	code[0] = code[0] | (cond << 8);
+	//pass code[0] here
+} 
+
+function asmuncB(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var simm = val[0];
+	code[0] = (code[0] | 0x1c) << 12;
+	code[0] = code[0] | ((simm >>> 0) & 0x7ff);
+	//pass code[0] here
+} 
 
 
+function asmBIC(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rd = val[0];
+	var rm = val[1];
+	code[0] = (code[0] | 0x10d) << 6;
+	code[0] = code[0] | (rd >>> 0);
+	code[0] = code[0] | (rm << 3);
+	//pass code[0] here
+} 
+
+function asmCMP(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	val rNo = instr.match(/R/g);
+	if (rNo == 1) {
+		//cmp1
+		var rn = val[0];
+		var imm = val[1];
+		code[0] = (code[0] | 0x05) << 11;
+		code[0] = code[0] | (imm >>> 0);
+		code[0] = code[0] | (rn << 8);
+	}
+	else {
+		var rn = val[0];
+		var rm = val[1];
+		if ((rn < 8) && (rm < 8)) {
+			//cmp2
+			code[0] = (code[0] | 0x10a) << 6;
+			code[0] = code[0] | (rn >>> 0);
+			code[0] = code[0] | (rm << 3);
+		}
+		else {
+			//cmp3
+			code[0] = (code[0] | 0x45) << 8;
+			code[0] = code[0] | ((rn >>> 0) & 0x7);
+			code[0] = code[0] | (rm << 3);
+			code[0] = code[0] | (((rn >>> 0) & 0x8) << 7);
+		}
+	}
+	//pass code[0] here
+}
+
+function asmLDR(instr)
+{
+	var code = new Int32Array(1);
+	var val = instr.match(/[0-9]+/g);
+	var rNo = instr.match(/R/g);
+	switch (rNo) {
+		case 1:
+			var rd = val[0];
+			var imm = val[1];
+			var pc = instr.match(/PC/g);
+			if (pc.length == 1)  {
+				//ldr3
+				code[0] = (code[0] | 0x09) << 11; 
+			}
+			else {
+				//ldr4
+				code[0] = (code[0] | 0x13) << 11;
+			}
+			code[0] = code[0] | (imm >>> 0);
+			code[0] = code[0] | (rd << 8);
+			break;
+		case 2:
+			//ldr1
+			var rd = val[0];
+			var rn = val[1];
+			var imm = val[2];
+			code[0] = (code[0] | 0x0d) << 11;
+			code[0] = code[0] | (rd >>> 0);
+			code[0] = code[0] | (rn << 3);
+			code[0] = code[0] | (imm << 6);
+			break;
+		case 3:
+			//ldr2
+			var rd = val[0];
+			var rn = val[1];
+			var rm = val[2];
+			code[0] = (code[0] | 0x2c) << 9;
+			code[0] = code[0] | (rd >>> 0);
+			code[0] = code[0] | (rn << 3);
+			code[0] = code[0] | (rm << 6);
+			break;
+	}
+	//pass code[0] here
+}
