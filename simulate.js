@@ -9,7 +9,7 @@ var zeroFlag = 0,negativeFlag = 0,carryFlag = 0, overflowFlag = 0;
 // conditons flags for implemented formats 1-4 not implemented
 
 function start(){
-
+    simulate(0b1011010111111111);
 }
 
 function stop(){
@@ -22,9 +22,10 @@ function step(){
     var instrLoc = regs[15]-4;
     if(instrLoc < mem.length){
         var instr = mem[instrLoc] | mem[instrLoc+1]<<8
-        regs[15] += 2; // increment by one
         simulate(instr);// load upper and lower part of half word instruction
-        console.log('instr '+instr);
+        console.log("instr "+instrLoc);
+
+        regs[15] += 2; // increment by one
         printRegisterContent(regs);
     }else{ // disable buttons of step and start since execution finished
         console.log('program execution done');
@@ -39,7 +40,7 @@ function dec2bin(dec){
 function simulate(instr) {
     "use strict";
     var fmt = instr>>13; // discard all but last 3 bits used for format identification
-    console.log('simulate case '+fmt);
+//    console.log('simulate case '+fmt);
     switch(fmt){
         case 0b000: // for format zero check whether to add/subtract or shift register
 			(instr >> 11 & 0b11) == 3 ? addSubtract(instr) : moveShiftedRegister(instr);
@@ -69,31 +70,33 @@ function simulate(instr) {
 
         case 0b101: // format 12 & 13 &  14
             //format 13 and 14 may have clashed since L can be 0 or 1 using previous parse
-			if((instr >> 8 & 0xb0) == 0xb0) addOffsetStackPointer(instr); // format
+			if((instr >> 9 & 0b10) == 0b10) pushPopRegisters(instr);
             else {
-                pushPopRegisters(instr);
-                /*
-                if ((instr >> 12 & 1) == 1) {
+                addOffsetStackPointer(instr); // format
+        /*        if ((instr >> 12 & 1) == 1) {
                     pushPopRegisters(instr); // format 14
                 }else {
                     loadAddress(instr);
-                } */
+                }  */
             }
             break;
 
         case 0b110: // format 15 & 16 & 17
-			if((instr>>8 & 0b11111) == 0b11111) softwareInterrupt(instr); // format 17
+            if((instr>>8 & 0x1f) == 0x1f) softwareInterrupt(instr); // format 17
 			else {
-                 if ((instr >> 12 & 1) == 1)
+                 if ((instr >> 12 & 1) == 1){
                     conditionalBranch(instr); // format 16
-                 else
-                    multLoadStore(instr); // format 15
+                }
+                /* else
+                    multLoadStore(instr); // format 15 */
             }
             break;
 
         case 0b111: // format 18 & 19
-            if(instr>>12 == 0xf)
+            if(instr>>12 == 0xf){
+                console.log('long and branch');
                 longBranchWithLink(instr);// format 19
+            }
 			else unconditionalBranch(instr); // format 18
 
             break;
@@ -252,7 +255,7 @@ function alu(instr){
     var opcode = instr>>6 & 0xf;
     var stringInstr;
 
-    console.log('alu called');
+//    console.log('alu called');
 
     switch(opcode){
         case 0: // flags done at endof switch
@@ -442,10 +445,11 @@ function addOffsetStackPointer(instr){
     if((instr>>7&1) == 1)
         immediate = -immediate;
     regs[13] += immediate;
-    printInstruction('ADD SP,#',immediate);
+    printInstruction('ADD SP,#'+immediate);
 }
 //format 18
 function unconditionalBranch(instr){
+    "use strict";
     var offset5 = instr & 0x7ff;
     var stringInstr = "B " + (offset5 * 2); // supposed to be label
     regs[PC] += offset5 * 2 ;
@@ -456,11 +460,13 @@ function unconditionalBranch(instr){
 function longBranchWithLink(instr){
     var offset = instr & 0x7ff;
     if ((instr >> 11 & 1) == 0) {
-        regs[LR] = regs[PC] + offset<<12;
+		var tmp = offset<<12;
+
+        regs[LR] = regs[PC] + (offset<<12);
     }
     else {
         var tmp = regs[PC] ;//- 1;
-        regs[PC] = regs[LR] + offset<<1;
+        regs[PC] = regs[LR] + (offset<<1);
         regs[LR] = tmp | 1;
     }
     var stringInstr = "BL " + offset; // supposed to be label
@@ -531,6 +537,8 @@ function conditionalBranch(instr){
                 regs[PC] += (offset)*4;
             instrString = 'BLE';
             break;
+        default:
+            instrString ='Undefined instr';
     }
     instrString += ' ' + offset;
     printInstruction(instrString);
@@ -550,18 +558,18 @@ function pushPopRegisters(instr){
     if(instr>>11 & 1 == 0){ // push regs
         instrString = 'PUSH{ ';
         for(var i = 0; i < 8;i++){
-            if(instr>>i & 1 == 1){
+            if((instr>>i & 1) == 1){
                 regs[STACK_POINTER] -= 4;
-                mem[regs[STACK_POINTER]] = regs[i] & 255;//chk
+                mem[regs[STACK_POINTER]] = regs[i] & 0xff;//chk
                 mem[regs[STACK_POINTER]+1] = regs[i]>>8 & 255;
                 mem[regs[STACK_POINTER]+2] = regs[i]>>16 & 255;
                 mem[regs[STACK_POINTER]+3] = regs[i]>>24 & 255;
                 instrString += 'R'+i+',';
             }
         }
-        if(instr>>8 & 1 == 1){ // save lr reg
+        if((instr>>8 & 1) == 1){ // save lr reg
             regs[STACK_POINTER] -= 4;
-            mem[regs[STACK_POINTER]] = regs[LR] & 255;//chk
+            mem[regs[STACK_POINTER]] = regs[LR] & 0xff;//chk
             mem[regs[STACK_POINTER]+1] = regs[LR]>>8 & 255;
             mem[regs[STACK_POINTER]+2] = regs[LR]>>16 & 255;
             mem[regs[STACK_POINTER]+3] = regs[LR]>>24 & 255;
@@ -570,7 +578,7 @@ function pushPopRegisters(instr){
     }else{ // pop regs
         instrString = 'POP{ ';
         for(var i = 0; i < 8;i++){
-            if(instr>>i & 1 == 1){
+            if((instr>>i) & 1 == 1){
                 regs[i]  = mem[regs[STACK_POINTER]];
                 regs[i] |= mem[regs[STACK_POINTER]+1]<<8;
                 regs[i] |= mem[regs[STACK_POINTER]+2]<<16;
@@ -588,8 +596,8 @@ function pushPopRegisters(instr){
                 instrString += 'PC';
          }
     }
-    if(instrString.length == instrString.lastIndexOf(','))
-        instrString = instrString.substr(0,instrString-1); // remove last comma
+//    if(instrString.length == instrString.lastIndexOf(','))
+//        instrString = instrString.substr(0,instrString-1); // remove last comma
     printInstruction(instrString+'}');
 }
 // disables step and start buttons
